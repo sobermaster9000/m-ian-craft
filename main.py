@@ -1,14 +1,14 @@
 from direct.showbase.ShowBase import ShowBase
+from direct.gui.OnscreenText import OnscreenText
 from direct.task import Task
+from direct.gui.OnscreenImage import OnscreenImage
 
-from panda3d.core import lookAt
+from panda3d.core import Fog
 
 from panda3d.core import GeomVertexFormat, GeomVertexData
 from panda3d.core import Geom, GeomTriangles, GeomVertexWriter
 from panda3d.core import Texture, GeomNode
-
-from panda3d.core import TextNode
-from panda3d.core import LVector3
+from panda3d.core import TransparencyAttrib
 
 from panda3d.physics import ActorNode, ForceNode, LinearVectorForce, PhysicsCollisionHandler
 from panda3d.core import NodePath
@@ -17,25 +17,25 @@ from panda3d.core import Vec3
 from panda3d.core import BitMask32
 
 from panda3d.core import WindowProperties
-
-from math import floor, sqrt
-
-from direct.stdpy.threading import Thread, Semaphore
-from queue import Queue
-
-from direct.gui.OnscreenImage import OnscreenImage
-from panda3d.core import TransparencyAttrib
-
-from functools import lru_cache
+from panda3d.core import loadPrcFileData
 
 from perlin_noise import PerlinNoise
-
+from math import floor, sqrt
 from hashlib import sha256
+from functools import lru_cache
+
+from direct.stdpy.threading import Thread
+from queue import Queue
+
+from sys import exit as sys_exit
+
+loadPrcFileData('', 'window-title M-Ian-Craft')
+loadPrcFileData('', 'fullscreen 1')
 
 def getDist(pointA, pointB):
   return sqrt(sum([(a - b) ** 2 for a, b in zip(pointA, pointB)]))
 
-class Chunks(): # add trees
+class Chunks():
   def __init__(self, seed, atlas):
     self.seed = seed
     self.noise = PerlinNoise(octaves=1, seed=seed)
@@ -126,21 +126,21 @@ class Chunks(): # add trees
       ]
     }
 
-    self.chunkColliderNP = NodePath('chunk_collider')
+    # self.chunkColliderNP = NodePath('chunk_collider')
 
     self.leavesRadius = 3
 
     self.chunkCentersToGenerate = Queue()
-    self.chunkColCentersToGenerate = Queue()
+    # self.chunkColCentersToGenerate = Queue()
 
     self.chunksToRender = Queue()
     self.chunksToUnload = Queue()
 
-    self.chunkColsToLoad = Queue()
-    self.chunkColsToUnload = Queue()
+    # self.chunkColsToLoad = Queue()
+    # self.chunkColsToUnload = Queue()
 
     self.renderedChunks = dict()
-    self.chunkColliders = dict()
+    # self.chunkColliders = dict()
 
     # self.atlas = self.loader.loadTexture('assets/textures/atlas.png')
     self.atlas = atlas
@@ -316,79 +316,79 @@ class Chunks(): # add trees
 
     self.chunksToRender.put(renderData)
 
-  def addColFaceToChunk(self, faceIdx, coords, colData):
-    colData['faceIdx'].append(faceIdx)
-    colData['coords'].append(coords)
+  # def addColFaceToChunk(self, faceIdx, coords, colData):
+  #   colData['faceIdx'].append(faceIdx)
+  #   colData['coords'].append(coords)
 
-  def genChunkColData(self, chunkX, chunkY):
-    chunkXBound1 = chunkX * self.chunkSize - self.chunkSize // 2
-    chunkXBound2 = chunkX * self.chunkSize + self.chunkSize // 2
-    chunkYBound1 = chunkY * self.chunkSize - self.chunkSize // 2
-    chunkYBound2 = chunkY * self.chunkSize + self.chunkSize // 2
-    offset = 3
+  # def genChunkColData(self, chunkX, chunkY):
+  #   chunkXBound1 = chunkX * self.chunkSize - self.chunkSize // 2
+  #   chunkXBound2 = chunkX * self.chunkSize + self.chunkSize // 2
+  #   chunkYBound1 = chunkY * self.chunkSize - self.chunkSize // 2
+  #   chunkYBound2 = chunkY * self.chunkSize + self.chunkSize // 2
+  #   offset = 3
 
-    colData = {'chunkX': chunkX, 'chunkY': chunkY, 'faceIdx': [], 'coords': []}
+  #   colData = {'chunkX': chunkX, 'chunkY': chunkY, 'faceIdx': [], 'coords': []}
 
-    for x in range(chunkXBound1 - offset, chunkXBound2 + offset):
-      for y in range(chunkYBound1 - offset, chunkYBound2 + offset):
+  #   for x in range(chunkXBound1 - offset, chunkXBound2 + offset):
+  #     for y in range(chunkYBound1 - offset, chunkYBound2 + offset):
 
-        Z = self.getGenHeight(x, y)
-        _z = min(
-          self.getGenHeight(x + 1, y),
-          self.getGenHeight(x - 1, y),
-          self.getGenHeight(x, y + 1),
-          self.getGenHeight(x, y - 1)
-        )
+  #       Z = self.getGenHeight(x, y)
+  #       _z = min(
+  #         self.getGenHeight(x + 1, y),
+  #         self.getGenHeight(x - 1, y),
+  #         self.getGenHeight(x, y + 1),
+  #         self.getGenHeight(x, y - 1)
+  #       )
         
-        treeLogZ = self.getTreeLogZ(x, y, Z)
-        z = max(Z, treeLogZ + 1)
+  #       treeLogZ = self.getTreeLogZ(x, y, Z)
+  #       z = max(Z, treeLogZ + 1)
         
-        while True:
-          if z > Z and z > treeLogZ:
-            self.addColFaceToChunk(4, (x, y, z), colData)
-            z -= 3
+  #       while True:
+  #         if z > Z and z > treeLogZ:
+  #           self.addColFaceToChunk(4, (x, y, z), colData)
+  #           z -= 3
 
-          if self.getGenHeight(x, y - 1) < z:
-            self.addColFaceToChunk(0, (x, y, z), colData)
-          if self.getGenHeight(x + 1, y) < z:
-            self.addColFaceToChunk(1, (x, y, z), colData)
-          if self.getGenHeight(x, y + 1) < z:
-            self.addColFaceToChunk(2, (x, y, z), colData)
-          if self.getGenHeight(x - 1, y) < z:
-            self.addColFaceToChunk(3, (x, y, z), colData)
-          # top face
-          if z == (Z if treeLogZ == float('-inf') else treeLogZ + 1):
-            self.addColFaceToChunk(4, (x, y, z), colData)
+  #         if self.getGenHeight(x, y - 1) < z:
+  #           self.addColFaceToChunk(0, (x, y, z), colData)
+  #         if self.getGenHeight(x + 1, y) < z:
+  #           self.addColFaceToChunk(1, (x, y, z), colData)
+  #         if self.getGenHeight(x, y + 1) < z:
+  #           self.addColFaceToChunk(2, (x, y, z), colData)
+  #         if self.getGenHeight(x - 1, y) < z:
+  #           self.addColFaceToChunk(3, (x, y, z), colData)
+  #         # top face
+  #         if z == (Z if treeLogZ == float('-inf') else treeLogZ + 1):
+  #           self.addColFaceToChunk(4, (x, y, z), colData)
 
-          # for water
-          # waterLvl = 10
-          # if z <= waterLvl:
-          #   self.addColFaceToChunk(4, (x, y, z), colData)
+  #         # for water
+  #         # waterLvl = 10
+  #         # if z <= waterLvl:
+  #         #   self.addColFaceToChunk(4, (x, y, z), colData)
           
-          if _z + 1 >= z:
-            break
+  #         if _z + 1 >= z:
+  #           break
 
-          z -= 1
+  #         z -= 1
         
-        leavesZRange = self.getLeavesZRange(x, y)
-        for z in leavesZRange:
-          if z <= Z or z <= treeLogZ + 1:
-            continue
+  #       leavesZRange = self.getLeavesZRange(x, y)
+  #       for z in leavesZRange:
+  #         if z <= Z or z <= treeLogZ + 1:
+  #           continue
 
-          if self.getGenHeight(x, y - 1) < z and self.getTreeLogZ(x, y - 1, Z) + 1 <= z and z not in self.getLeavesZRange(x, y - 1):
-            self.addColFaceToChunk(0, (x, y, z), colData)
-          if self.getGenHeight(x + 1, y) < z and self.getTreeLogZ(x + 1, y, Z) + 1 <= z and z not in self.getLeavesZRange(x + 1, y):
-            self.addColFaceToChunk(1, (x, y, z), colData)
-          if self.getGenHeight(x, y + 1) < z and self.getTreeLogZ(x, y + 1, Z) + 1 <= z and z not in self.getLeavesZRange(x, y + 1):
-            self.addColFaceToChunk(2, (x, y, z), colData)
-          if self.getGenHeight(x - 1, y) < z and self.getTreeLogZ(x - 1, y, Z) + 1 <= z and z not in self.getLeavesZRange(x - 1, y):
-            self.addColFaceToChunk(3, (x, y, z), colData)
-          if z == leavesZRange.stop - 1:
-            self.addColFaceToChunk(4, (x, y, z), colData)
-          if z == leavesZRange.start and Z < z and treeLogZ + 1 < z:
-            self.addColFaceToChunk(5, (x, y, z), colData)
+  #         if self.getGenHeight(x, y - 1) < z and self.getTreeLogZ(x, y - 1, Z) + 1 <= z and z not in self.getLeavesZRange(x, y - 1):
+  #           self.addColFaceToChunk(0, (x, y, z), colData)
+  #         if self.getGenHeight(x + 1, y) < z and self.getTreeLogZ(x + 1, y, Z) + 1 <= z and z not in self.getLeavesZRange(x + 1, y):
+  #           self.addColFaceToChunk(1, (x, y, z), colData)
+  #         if self.getGenHeight(x, y + 1) < z and self.getTreeLogZ(x, y + 1, Z) + 1 <= z and z not in self.getLeavesZRange(x, y + 1):
+  #           self.addColFaceToChunk(2, (x, y, z), colData)
+  #         if self.getGenHeight(x - 1, y) < z and self.getTreeLogZ(x - 1, y, Z) + 1 <= z and z not in self.getLeavesZRange(x - 1, y):
+  #           self.addColFaceToChunk(3, (x, y, z), colData)
+  #         if z == leavesZRange.stop - 1:
+  #           self.addColFaceToChunk(4, (x, y, z), colData)
+  #         if z == leavesZRange.start and Z < z and treeLogZ + 1 < z:
+  #           self.addColFaceToChunk(5, (x, y, z), colData)
     
-    self.chunkColsToLoad.put(colData)
+  #   self.chunkColsToLoad.put(colData)
 
   def genChunksData(self, chunkX, chunkY):
     self.renderedChunks[chunkX, chunkY] = None
@@ -408,20 +408,20 @@ class Chunks(): # add trees
 
     # [self.chunksToUnload.put((x, y)) for x, y in self.renderedChunks.keys() - chunkSet]
 
-  def genChunkColsData(self, chunkX, chunkY):
-    self.chunkColliders[chunkX, chunkY] = None
-    chunkSet = set()
-    toGenerate = []
+  # def genChunkColsData(self, chunkX, chunkY):
+  #   self.chunkColliders[chunkX, chunkY] = None
+  #   chunkSet = set()
+  #   toGenerate = []
 
-    for i in range(1):
-      for j in range(1):
-        chunkSet.add((chunkX + i, chunkY + j))
-        if self.chunkColliders.get((chunkX + i, chunkY + j)) is None:
-          toGenerate.append((chunkX + i, chunkY + j))
+  #   for i in range(1):
+  #     for j in range(1):
+  #       chunkSet.add((chunkX + i, chunkY + j))
+  #       if self.chunkColliders.get((chunkX + i, chunkY + j)) is None:
+  #         toGenerate.append((chunkX + i, chunkY + j))
     
-    [self.genChunkColData(x, y) for x, y in sorted(toGenerate, key=lambda pos: getDist((chunkX, chunkY), pos))]
+  #   [self.genChunkColData(x, y) for x, y in sorted(toGenerate, key=lambda pos: getDist((chunkX, chunkY), pos))]
 
-    [self.chunkColsToUnload.put((x, y)) for x, y in sorted(self.chunkColliders.keys() - chunkSet, key=lambda pos: getDist((chunkX, chunkY), pos), reverse=True)]
+  #   [self.chunkColsToUnload.put((x, y)) for x, y in sorted(self.chunkColliders.keys() - chunkSet, key=lambda pos: getDist((chunkX, chunkY), pos), reverse=True)]
 
   def chunkGenThread(self):
     print('started chunkGenThread')
@@ -429,11 +429,11 @@ class Chunks(): # add trees
       if not self.chunkCentersToGenerate.empty():
         self.genChunksData(*self.chunkCentersToGenerate.get())
 
-  def chunkColGenThread(self):
-    print('started chunkColGenThread')
-    while True:
-      if not self.chunkColCentersToGenerate.empty():
-        self.genChunkColsData(*self.chunkColCentersToGenerate.get())
+  # def chunkColGenThread(self):
+  #   print('started chunkColGenThread')
+  #   while True:
+  #     if not self.chunkColCentersToGenerate.empty():
+  #       self.genChunkColsData(*self.chunkColCentersToGenerate.get())
 
   def renderChunk(self, renderData, render):
     chunkX, chunkY, quads, texcoordsIdx, blockTex = renderData.values()
@@ -471,30 +471,31 @@ class Chunks(): # add trees
     
   #   [self.chunksToUnload.put((x, y)) for x, y in self.renderedChunks.keys() - chunkSet]
 
-  def loadChunkCol(self, colData, render):
-    chunkX, chunkY, faceIdx, coords = colData.values()
-    chunkColNode = CollisionNode('chunk_collider')
+  # def loadChunkCol(self, colData, render):
+  #   chunkX, chunkY, faceIdx, coords = colData.values()
+  #   chunkColNode = CollisionNode('chunk_collider')
 
-    for coord, i in zip(coords, faceIdx):
-      verts = self.getVerts(*coord)
-      faceColPoly = CollisionPolygon(*[Point3(*verts[j]) for j in self.faceQuads[i]])
-      chunkColNode.addSolid(faceColPoly)
+  #   for coord, i in zip(coords, faceIdx):
+  #     verts = self.getVerts(*coord)
+  #     faceColPoly = CollisionPolygon(*[Point3(*verts[j]) for j in self.faceQuads[i]])
+  #     chunkColNode.addSolid(faceColPoly)
     
-    chunkColNP = self.chunkColliderNP.attachNewNode(chunkColNode)
-    # chunkColNP.show()
+  #   chunkColNP = self.chunkColliderNP.attachNewNode(chunkColNode)
+  #   # chunkColNP.show()
 
-    chunkColNP.node().setFromCollideMask(BitMask32.bit(1))
-    chunkColNP.node().setIntoCollideMask(BitMask32.bit(1))
+  #   chunkColNP.node().setFromCollideMask(BitMask32.bit(1))
+  #   chunkColNP.node().setIntoCollideMask(BitMask32.bit(1))
 
-    self.chunkColliders[chunkX, chunkY] = chunkColNP
+  #   self.chunkColliders[chunkX, chunkY] = chunkColNP
 
 class mIANcraft(ShowBase):
   def __init__(self):
     ShowBase.__init__(self)
     
-    # winProps = WindowProperties()
-    # winProps.setCursorHidden(True)
-    # self.win.requestProperties(winProps)
+    winProps = WindowProperties()
+    winProps.setIconFilename("assets/icon.ico")
+    self.win.requestProperties(winProps)
+
     self.enableRelativeMouse()
 
     self.camLens.setFov(90)
@@ -507,10 +508,16 @@ class mIANcraft(ShowBase):
 
     self.chunks = Chunks(420, self.loader.loadTexture('assets/textures/atlas.png'))
 
+    fog = Fog('distance_fog')
+    fog.setColor(0.5, 0.8, 1.0)
+    # fog.setLinearRange(0, self.chunks.renderDist * self.chunks.chunkSize)
+    fog.setExpDensity(0.005)
+    self.render.setFog(fog)
+
     self.prevPlayerChunkCoords = (0, 0)
     self.lastChunkRenderCoords = (0, 0)
 
-    self.chunks.chunkColliderNP.reparentTo(self.render)
+    # self.chunks.chunkColliderNP.reparentTo(self.render)
     
     self.tickDuration = 0.05
     self.lastTick = 0
@@ -524,7 +531,12 @@ class mIANcraft(ShowBase):
     self.crosshairTex.setMagfilter(Texture.FT_nearest)
     self.crosshairTex.setMinfilter(Texture.FT_nearest)
 
-    self.paused = False
+    self.controlsText = OnscreenText(
+      text='Controls:\n\nWASD - Move\nMouse - Look around\nEscape - Exit',
+      pos=(0, 0.9),
+      scale=0.05,
+      fg=(1, 1, 1, 1)
+    )
 
   def initPlayerCollision(self):
     self.enableParticles()
@@ -537,17 +549,13 @@ class mIANcraft(ShowBase):
     self.camera.reparentTo(self.playerNP)
     self.playerNP.setPos(0, 0, 1)
     self.disableMouse()
-    # self.useDrive()
-    # self.useTrackball()
-    # self.camera.setPos(0, -5, 1.5)
     self.camera.setPos(0, 0, 1.5)
 
     self.playerCollisionNode = CollisionNode('player_collider')
     self.playerCollisionBox = CollisionBox(Point3(0, 0, 0.9), 0.3, 0.3, 0.9)
     self.playerCollisionNode.addSolid(self.playerCollisionBox)
     self.playerCollisionNP = self.playerNP.attachNewNode(self.playerCollisionNode)
-    # debug
-    self.playerCollisionNP.show()
+    # self.playerCollisionNP.show()
 
     self.playerCollisionNP.node().setFromCollideMask(BitMask32.bit(1))
     self.playerCollisionNP.node().setIntoCollideMask(BitMask32.bit(1))
@@ -556,8 +564,7 @@ class mIANcraft(ShowBase):
     self.groundCheckBox = CollisionBox(Point3(0, 0, 0), 0.3, 0.3, 0.1)
     self.groundCheckNode.addSolid(self.groundCheckBox)
     self.groundCheckNP = self.playerNP.attachNewNode(self.groundCheckNode)
-    # debug
-    self.groundCheckNP.show()
+    # self.groundCheckNP.show()
 
     self.groundCheckNP.node().setFromCollideMask(BitMask32.bit(1))
     self.groundCheckNP.node().setIntoCollideMask(BitMask32.bit(0))
@@ -581,49 +588,16 @@ class mIANcraft(ShowBase):
     self.accept('a-up', self.setKeyState, ['a', False])
     self.accept('s-up', self.setKeyState, ['s', False])
     self.accept('d-up', self.setKeyState, ['d', False])
-    self.accept('space', self.playerJump)
+    # self.accept('space', self.playerJump)
     # self.accept('mouse1', self.destroyBlock)
     # self.accept('mouse3', self.placeBlock)
-    self.accept('escape', self.setKeyState, ['escape', None])
+    self.accept('escape', sys_exit)
 
     self.speed = 5
     self.taskMgr.add(self.updatePlayerMotionTask, "update_player_motion_task")
 
     self.mouseSensitivity = 30
     self.taskMgr.add(self.updateMouseMotionTask, 'update_mouse_motion_task')
-
-  def rayCast(self):
-    self.rayLength = 5
-    startPoint = self.playerNP.getPos(self.render)
-    startPoint.z += 1.5
-    transformVect = self.camera.getQuat().getForward() * self.rayLength
-    endPoint = startPoint + transformVect
-
-    rayCastNP = NodePath('raycast')
-    rayCastNP.reparentTo(self.render)
-    rayCastColNode = CollisionNode('raycast')
-    rayCastCol = CollisionSegment(*startPoint, *endPoint)
-    rayCastColNode.addSolid(rayCastCol)
-    rayCastColNP = rayCastNP.attachNewNode(rayCastColNode)
-    # rayCastColNP.show()
-    
-    rayCastColNP.node().setFromCollideMask(BitMask32.bit(1))
-    rayCastColNP.node().setIntoCollideMask(BitMask32.bit(0))
-
-    self.rayCastHandler = CollisionHandlerQueue()
-
-    self.cTrav.addCollider(rayCastColNP, self.rayCastHandler)
-    self.cTrav.traverse(self.render)
-
-    result = None
-    for hit in self.rayCastHandler.entries:
-      hitNodePath = hit.getIntoNodePath()
-      if str(hitNodePath).endswith('chunk_collider'):
-        result = (hit.getSurfacePoint(hitNodePath), hit.getSurfaceNormal(hitNodePath))
-
-    rayCastNP.removeNode()
-
-    return result
 
   def clampCamAngle(self, pitch):
     return max(min(pitch, 90), -90)
@@ -641,7 +615,7 @@ class mIANcraft(ShowBase):
     self.win.requestProperties(winProps)
 
   def updateMouseMotionTask(self, task): # change to m_relative mode
-    if self.mouseWatcherNode.hasMouse() and not self.paused:
+    if self.mouseWatcherNode.hasMouse():
       mouse = self.mouseWatcherNode.getMouse()
       mouseX, mouseY = mouse.getX(), mouse.getY()
       centerX, centerY = self.win.getXSize() // 2, self.win.getYSize() // 2
@@ -661,14 +635,7 @@ class mIANcraft(ShowBase):
     return Task.cont
 
   def setKeyState(self, key, state):
-    if key == 'escape':
-      self.paused = not self.paused
-      if self.paused:
-        self.disableRelativeMouse()
-      else:
-        self.enableRelativeMouse()
-    else:
-      self.keyStates[key] = state
+    self.keyStates[key] = state
 
   def updatePlayerMotionTask(self, task):
     dt = globalClock.getDt()
@@ -696,64 +663,90 @@ class mIANcraft(ShowBase):
     else:
       self.playerForces = ForceNode('player_forces')
       self.gravNP = self.render.attachNewNode(self.playerForces)
-      self.gravForce = LinearVectorForce(0, 0, -0)
+      # self.gravForce = LinearVectorForce(0, 0, -30)
+      self.gravForce = LinearVectorForce(0, 0, 0)
       self.playerForces.addForce(self.gravForce)
       self.physicsMgr.addLinearForce(self.gravForce)
 
-  def playerIsGrounded(self):
-    # print(list(self.groundCheckHandler.entries))
-    return any(str(hit.getIntoNodePath()).endswith('chunk_collider') \
-               for hit in self.groundCheckHandler.entries)
+  # def playerIsGrounded(self):
+  #   # print(list(self.groundCheckHandler.entries))
+  #   return any(str(hit.getIntoNodePath()).endswith('chunk_collider') \
+  #              for hit in self.groundCheckHandler.entries)
 
-  def playerJump(self):
-    if self.playerIsGrounded():
-      self.playerPhysicsNode.getPhysicsObject().addImpulse(Vec3(0, 0, 10))
+  # def playerJump(self):
+  #   if self.playerIsGrounded():
+  #     self.playerPhysicsNode.getPhysicsObject().addImpulse(Vec3(0, 0, 10))
 
   def getDist(self, pointA, pointB):
     return sqrt(sum([(a - b) ** 2 for a, b in zip(pointA, pointB)]))
 
-  def rayCast(self):
-    self.rayLength = 5
-    startPoint = self.playerNP.getPos(self.render)
-    startPoint.z += 1.5
-    transformVect = self.camera.getQuat().getForward() * self.rayLength
-    endPoint = startPoint + transformVect
+  # def rayCast(self):
+  #   self.rayLength = 5
+  #   startPoint = self.playerNP.getPos(self.render)
+  #   startPoint.z += 1.5
+  #   transformVect = self.camera.getQuat().getForward() * self.rayLength
+  #   endPoint = startPoint + transformVect
 
-    rayCastNP = NodePath('raycast')
-    rayCastNP.reparentTo(self.render)
-    rayCastColNode = CollisionNode('raycast')
-    rayCastCol = CollisionSegment(*startPoint, *endPoint)
-    rayCastColNode.addSolid(rayCastCol)
-    rayCastColNP = rayCastNP.attachNewNode(rayCastColNode)
-    # rayCastColNP.show()
+  #   rayCastNP = NodePath('raycast')
+  #   rayCastNP.reparentTo(self.render)
+  #   rayCastColNode = CollisionNode('raycast')
+  #   rayCastCol = CollisionSegment(*startPoint, *endPoint)
+  #   rayCastColNode.addSolid(rayCastCol)
+  #   rayCastColNP = rayCastNP.attachNewNode(rayCastColNode)
+  #   # rayCastColNP.show()
     
-    rayCastColNP.node().setFromCollideMask(BitMask32.bit(1))
-    rayCastColNP.node().setIntoCollideMask(BitMask32.bit(0))
+  #   rayCastColNP.node().setFromCollideMask(BitMask32.bit(1))
+  #   rayCastColNP.node().setIntoCollideMask(BitMask32.bit(0))
 
-    self.rayCastHandler = CollisionHandlerQueue()
+  #   self.rayCastHandler = CollisionHandlerQueue()
 
-    self.cTrav.addCollider(rayCastColNP, self.rayCastHandler)
-    self.cTrav.traverse(self.render)
+  #   self.cTrav.addCollider(rayCastColNP, self.rayCastHandler)
+  #   self.cTrav.traverse(self.render)
 
-    # result = None
-    # for hit in self.rayCastHandler.entries:
-    #   hitNodePath = hit.getIntoNodePath()
-    #   if str(hitNodePath).endswith('chunk_collider'):
-    #     result = (hit.getSurfacePoint(hitNodePath), hit.getSurfaceNormal(hitNodePath))
+  #   result = None
+  #   for hit in self.rayCastHandler.entries:
+  #     hitNodePath = hit.getIntoNodePath()
+  #     if str(hitNodePath).endswith('chunk_collider'):
+  #       result = (hit.getSurfacePoint(hitNodePath), hit.getSurfaceNormal(hitNodePath))
 
-    # rayCastNP.removeNode()
+  #   rayCastNP.removeNode()
 
-    result = None
+  #   return result
 
-    if self.rayCastHandler.getNumEntries == 0:
-      return result
+  # def rayCast(self):
+  #   self.rayLength = 5
+  #   startPoint = self.playerNP.getPos(self.render)
+  #   startPoint.z += 1.5
+  #   transformVect = self.camera.getQuat().getForward() * self.rayLength
+  #   endPoint = startPoint + transformVect
+
+  #   rayCastNP = NodePath('raycast')
+  #   rayCastNP.reparentTo(self.render)
+  #   rayCastColNode = CollisionNode('raycast')
+  #   rayCastCol = CollisionSegment(*startPoint, *endPoint)
+  #   rayCastColNode.addSolid(rayCastCol)
+  #   rayCastColNP = rayCastNP.attachNewNode(rayCastColNode)
+  #   # rayCastColNP.show()
     
-    hit = self.rayCastHandler.getEntry(0)
-    hitNP = hit.getIntoNodePath()
-    if str(hitNP).endswith('chunk_collider'):
-      result = hit.getSurfacePoint(hitNP), hit.getSurfaceNormal(hitNP)
+  #   rayCastColNP.node().setFromCollideMask(BitMask32.bit(1))
+  #   rayCastColNP.node().setIntoCollideMask(BitMask32.bit(0))
 
-    return result
+  #   self.rayCastHandler = CollisionHandlerQueue()
+
+  #   self.cTrav.addCollider(rayCastColNP, self.rayCastHandler)
+  #   self.cTrav.traverse(self.render)
+
+  #   result = None
+
+  #   if self.rayCastHandler.getNumEntries == 0:
+  #     return result
+    
+  #   hit = self.rayCastHandler.getEntry(0)
+  #   hitNP = hit.getIntoNodePath()
+  #   if str(hitNP).endswith('chunk_collider'):
+  #     result = hit.getSurfacePoint(hitNP), hit.getSurfaceNormal(hitNP)
+
+  #   return result
 
   def tickUpdateTask(self, task):
     if task.time  - self.lastTick >= self.tickDuration:
@@ -761,7 +754,7 @@ class mIANcraft(ShowBase):
 
       if currentChunkCoords not in self.chunks.renderedChunks:
         self.chunks.chunkCentersToGenerate.put(currentChunkCoords)
-        self.chunks.chunkColCentersToGenerate.put(currentChunkCoords)
+        # self.chunks.chunkColCentersToGenerate.put(currentChunkCoords)
       
       if currentChunkCoords != self.prevPlayerChunkCoords:
         # self.chunks.chunkColCentersToGenerate.put(currentChunkCoords)
@@ -775,10 +768,10 @@ class mIANcraft(ShowBase):
         self.chunks.renderChunk(self.chunks.chunksToRender.get(), self.render)
         chunksThisTick += 1
       
-      chunksThisTick = 0
-      while not self.chunks.chunkColsToLoad.empty() and chunksThisTick < chunksPerTick:
-        self.chunks.loadChunkCol(self.chunks.chunkColsToLoad.get(), self.render)
-        chunksThisTick += 1
+      # chunksThisTick = 0
+      # while not self.chunks.chunkColsToLoad.empty() and chunksThisTick < chunksPerTick:
+      #   self.chunks.loadChunkCol(self.chunks.chunkColsToLoad.get(), self.render)
+      #   chunksThisTick += 1
 
       chunksThisTick = 0
       while not self.chunks.chunksToUnload.empty() and chunksThisTick < chunksPerTick:
@@ -789,14 +782,14 @@ class mIANcraft(ShowBase):
           self.chunks.chunksToUnload.put(chunkToUnload)
         chunksThisTick += 1
 
-      chunksThisTick = 0
-      while not self.chunks.chunkColsToUnload.empty() and chunksThisTick < chunksPerTick:
-        chunkColToUnload = self.chunks.chunkColsToUnload.get()
-        if chunkColToUnload in self.chunks.chunkColliders:
-          self.chunks.chunkColliders.pop(chunkColToUnload).removeNode()
-        else:
-          self.chunks.chunkColsToUnload.put(chunkColToUnload)
-        chunksThisTick += 1
+      # chunksThisTick = 0
+      # while not self.chunks.chunkColsToUnload.empty() and chunksThisTick < chunksPerTick:
+      #   chunkColToUnload = self.chunks.chunkColsToUnload.get()
+      #   if chunkColToUnload in self.chunks.chunkColliders:
+      #     self.chunks.chunkColliders.pop(chunkColToUnload).removeNode()
+      #   else:
+      #     self.chunks.chunkColsToUnload.put(chunkColToUnload)
+      #   chunksThisTick += 1
 
       self.lastTick = task.time
 
@@ -805,5 +798,5 @@ class mIANcraft(ShowBase):
 if __name__ == '__main__':
   app = mIANcraft()
   Thread(target=app.chunks.chunkGenThread, args=()).start()
-  Thread(target=app.chunks.chunkColGenThread, args=()).start()
+  # Thread(target=app.chunks.chunkColGenThread, args=()).start()
   app.run()
