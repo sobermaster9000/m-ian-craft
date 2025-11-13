@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
   framework.set_window_title("M-Ian-Craft");
   WindowFramework *window = framework.open_window();
 
-  // Here is room for your own code
+  // more code here
 
   framework.main_loop();
   framework.close_framework();
