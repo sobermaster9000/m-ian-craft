@@ -15,8 +15,8 @@ using namespace std;
 #include "perlinNoise2.h"
 #include "stackedPerlinNoise2.h"
 
-// #include "texture.h"
-// #include "texturePool.h"
+#include "texture.h"
+#include "texturePool.h"
 
 const vector<vector<float>> cube_vertices_deltas = {
   {-0.5f, -0.5f, 0},
@@ -47,6 +47,15 @@ const vector<vector<int>> cube_normals = {
   { 0,  1,  0},
 };
 
+const vector<vector<pair<float, float>>> cube_uvs = {
+  {{0, 0.5f}, {0.25f, 0.5f}, {0.25f, 1}, {0, 1}},
+  {{0.25f, 0.5f}, {0.5f, 0.5f}, {0.5f, 1}, {0.25f, 1}},
+  {{0.5f, 0.5f}, {0.75f, 0.5f}, {0.75f, 1}, {0.5f, 1}},
+  {{0.75f, 0.5f}, {1, 0.5f}, {1, 1}, {0.75f, 1}},
+  {{0, 0}, {0.25f, 0}, {0.25f, 0.5f}, {0, 0.5f}},
+  {{0.25f, 0}, {0.5f, 0}, {0.5f, 0.5f}, {0.25f, 0.5f}}
+};
+
 void put_quad(PT(GeomTriangles) gt, int v0, int v1, int v2, int v3) {
   gt->add_vertices(v0, v1, v2);
   gt->add_vertices(v0, v2, v3);
@@ -54,11 +63,12 @@ void put_quad(PT(GeomTriangles) gt, int v0, int v1, int v2, int v3) {
 
 NodePath create_cube(float x, float y, float z) {
   PT(GeomVertexData) vdata = new GeomVertexData(
-    "cube", GeomVertexFormat::get_v3n3(), Geom::UH_static);
+    "cube", GeomVertexFormat::get_v3n3t2(), Geom::UH_static);
   vdata->set_num_rows(8);
 
   GeomVertexWriter vertex(vdata, "vertex");
   GeomVertexWriter normal(vdata, "normal");
+  GeomVertexWriter texcoord(vdata, "texcoord");
 
   PT(GeomTriangles) tris = new GeomTriangles(Geom::UH_static);
   for (int i = 0; i < 6; i++) {
@@ -72,6 +82,9 @@ NodePath create_cube(float x, float y, float z) {
                      (i + 1) * 4 - 3,
                      (i + 1) * 4 - 2,
                      (i + 1) * 4 - 1);
+      for (auto &uv: cube_uvs[i]) {
+        texcoord.add_data2(LVecBase2(uv.first, uv.second));
+      }
     }
   }
   tris->close_primitive();
@@ -96,7 +109,7 @@ int main(int argc, char *argv[]) {
     // PerlinNoise2 noise(0.02f, 0.02f, 256, 69);
     StackedPerlinNoise2 noise(0.01f, 0.01f, 2, 2.0f, 0.5f, 256);
 
-    // PT(Texture) tex = TexturePool::load_texture("legacy/assets/textures/grass.png");
+    PT(Texture) tex = TexturePool::load_texture("legacy/assets/textures/grass.png");
 
     // NodePath cube = create_cube(0, 0, 0);
     // cube.reparent_to(window->get_render());
@@ -106,7 +119,7 @@ int main(int argc, char *argv[]) {
     for (int x = -10; x <= 10; x++) {
       for (int y = -10; y <= 10; y++) {
         NodePath cube = create_cube(x, y, (noise.noise(x, y) * 1.0f));
-        // cube.set_texture(tex);
+        cube.set_texture(tex);
         cube.reparent_to(window->get_render());
         cube.set_scale(2.0f);
       }
