@@ -21,30 +21,30 @@ using namespace std;
 const vector<vector<float>> cube_vertices_deltas = {
   {-0.5f, -0.5f, 0},
   { 0.5f, -0.5f, 0},
-  {-0.5f,  0.5f, 0},
   { 0.5f,  0.5f, 0},
+  {-0.5f,  0.5f, 0},
   {-0.5f, -0.5f, 1},
   { 0.5f, -0.5f, 1},
-  {-0.5f,  0.5f, 1},
   { 0.5f,  0.5f, 1},
+  {-0.5f,  0.5f, 1},
 };
 
 const vector<vector<int>> cube_quads = {
-  {4, 5, 1, 0},
-  {6, 7, 5, 4},
+  {0, 1, 5, 4},
+  {1, 2, 6, 5},
   {2, 3, 7, 6},
-  {0, 1, 3, 2},
-  {5, 7, 3, 1},
-  {6, 4, 0, 2},
+  {3, 0, 4, 7},
+  {4, 5, 6, 7},
+  {3, 2, 1, 0},
 };
 
 const vector<vector<int>> cube_normals = {
-  { 0,  0, -1},
-  { 0,  0,  1},
-  {-1,  0,  0},
-  { 1,  0,  0},
   { 0, -1,  0},
+  { 1,  0,  0},
   { 0,  1,  0},
+  {-1,  0,  0},
+  { 0,  0,  1},
+  { 0,  0, -1},
 };
 
 const vector<vector<pair<float, float>>> cube_uvs = {
@@ -64,7 +64,7 @@ void put_quad(PT(GeomTriangles) gt, int v0, int v1, int v2, int v3) {
 NodePath create_cube(float x, float y, float z) {
   PT(GeomVertexData) vdata = new GeomVertexData(
     "cube", GeomVertexFormat::get_v3n3t2(), Geom::UH_static);
-  vdata->set_num_rows(8);
+  vdata->set_num_rows(24);
 
   GeomVertexWriter vertex(vdata, "vertex");
   GeomVertexWriter normal(vdata, "normal");
@@ -82,9 +82,9 @@ NodePath create_cube(float x, float y, float z) {
                      (i + 1) * 4 - 3,
                      (i + 1) * 4 - 2,
                      (i + 1) * 4 - 1);
-      for (auto &uv: cube_uvs[i]) {
-        texcoord.add_data2(LVecBase2(uv.first, uv.second));
-      }
+    }
+    for (auto &uv: cube_uvs[i]) {
+      texcoord.add_data2(LVecBase2(uv.first, uv.second));
     }
   }
   tris->close_primitive();
@@ -110,6 +110,8 @@ int main(int argc, char *argv[]) {
     StackedPerlinNoise2 noise(0.01f, 0.01f, 2, 2.0f, 0.5f, 256);
 
     PT(Texture) tex = TexturePool::load_texture("legacy/assets/textures/grass.png");
+    tex->set_magfilter(SamplerState::FT_nearest);
+    tex->set_minfilter(SamplerState::FT_nearest);
 
     // NodePath cube = create_cube(0, 0, 0);
     // cube.reparent_to(window->get_render());
