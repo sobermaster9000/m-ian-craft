@@ -12,7 +12,6 @@ using namespace std;
 #include "geomTriangles.h"
 #include "geomNode.h"
 
-#include "perlinNoise2.h"
 #include "stackedPerlinNoise2.h"
 
 #include "texture.h"
@@ -101,26 +100,21 @@ NodePath create_cube(float x, float y, float z) {
 int main(int argc, char *argv[]) {
     PandaFramework framework;
     framework.open_framework(argc, argv);
-    framework.set_window_title("Procedural Cube");
+    framework.set_window_title("M-Ian-Craft");
     
     WindowFramework *window = framework.open_window();
     window->setup_trackball();
     
-    // PerlinNoise2 noise(0.02f, 0.02f, 256, 69);
-    StackedPerlinNoise2 noise(0.01f, 0.01f, 2, 2.0f, 0.5f, 256);
+    StackedPerlinNoise2 noise(0.3f, 0.3f, 3, 2.0f, 0.5f, 256);
 
     PT(Texture) tex = TexturePool::load_texture("legacy/assets/textures/grass.png");
     tex->set_magfilter(SamplerState::FT_nearest);
     tex->set_minfilter(SamplerState::FT_nearest);
-
-    // NodePath cube = create_cube(0, 0, 0);
-    // cube.reparent_to(window->get_render());
-    // cube.set_pos(0, 10, 0);
-    // cube.set_scale(2.0f);
-
-    for (int x = -10; x <= 10; x++) {
-      for (int y = -10; y <= 10; y++) {
-        NodePath cube = create_cube(x, y, (noise.noise(x, y) * 1.0f));
+    
+    int s = 100;
+    for (int x = -s; x <= s; x++) {
+      for (int y = -s; y <= s; y++) {
+        NodePath cube = create_cube(x, y, (int)(noise.noise(x * 0.01f, y * 0.01f) * 7.5f));
         cube.set_texture(tex);
         cube.reparent_to(window->get_render());
         cube.set_scale(2.0f);
