@@ -61,13 +61,14 @@ const vector<vector<pair<float, float>>> cube_uvs = {
 };
 
 map<string, bool> keys;
+PT(AsyncTaskManager) taskMgr = AsyncTaskManager::get_global_ptr();
 
 void put_quad(PT(GeomTriangles) gt, int v0, int v1, int v2, int v3);
 
 NodePath create_cube(float x, float y, float z);
 
 void update_key(const Event* event, void* data);
-AsyncTask::DoneStatus move_player_task(GenericAsyncTask *task, void *data);
+AsyncTask::DoneStatus move_player_task(GenericAsyncTask *task, void *camera_ptr);
 
 int main(int argc, char *argv[]) {
   PandaFramework framework;
@@ -96,7 +97,9 @@ int main(int argc, char *argv[]) {
     {"w", false},
     {"a", false},
     {"s", false},
-    {"d", false}
+    {"d", false},
+    {"space", false},
+    {"shift", false},
   };
 
   window->enable_keyboard();
@@ -113,6 +116,8 @@ int main(int argc, char *argv[]) {
       update_key,
       nullptr);
   }
+
+  taskMgr->add(new GenericAsyncTask("move_player_task", move_player_task, &camera));
 
   framework.main_loop();
   framework.close_framework();
@@ -165,11 +170,28 @@ NodePath create_cube(float x, float y, float z) {
 void update_key(const Event* event, void* data) {
   // only works for one character keys
   string key = event->get_name();
-  keys[key.substr(0, 1)] = (key.length() == 1);
-  cout << key.substr(0, 1) << " " << keys[key.substr(0, 1)] << endl;
+  int idx = key.find("-up");
+  if (idx != string::npos)
+    key = key.substr(0, idx);
+  keys[key] = (idx == string::npos);
 }
 
-// AyncTask::DoneStatus move_player_task(GenericAsyncTask *task, void *data) {
-//   // move the player
-//   return AsyncTask::DS_cont;
-// }
+AsyncTask::DoneStatus move_player_task(GenericAsyncTask *task, void *camera_ptr) {
+  // move the player
+  NodePath *camera = static_cast<NodePath *>(camera_ptr);
+  LVecBase3 pos = camera->get_pos();
+  float speed = 1.0f;
+  if (keys["w"])
+    camera->set_y(camera->get_y() + speed);
+    if (keys["a"])
+      camera->set_x(camera->get_x() - speed);
+  if (keys["s"])
+    camera->set_y(camera->get_y() - speed);
+  if (keys["d"])
+    camera->set_x(camera->get_x() + speed);
+  if (keys["space"])
+    camera->set_z(camera->get_z() + speed);
+  if (keys["shift"])
+    camera->set_z(camera->get_z() - speed);
+  return AsyncTask::DS_cont;
+}
