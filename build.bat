@@ -1,0 +1,1 @@
+g++ main.cpp glad.c -I./include -L./lib -lglfw3dll -omain.exe
