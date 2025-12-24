@@ -13,7 +13,7 @@ void Camera::matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shade
 
     // make camera look forward
     viewMatrix = glm::lookAt(position, position + orientation, up);
-    projectionMatrix = glm::perspective(glm::radians(FOVdeg), (float)(width/height), nearPlane, farPlane);
+    projectionMatrix = glm::perspective(glm::radians(FOVdeg), (float)width/(float)height, nearPlane, farPlane);
 
     // update visual transformations in shader
     glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, uniform), 1, GL_FALSE, glm::value_ptr(projectionMatrix * viewMatrix));
@@ -57,12 +57,12 @@ void Camera::inputs(GLFWwindow* window) {
         double mouseX, mouseY;
         glfwGetCursorPos(window, &mouseX, &mouseY);
 
-        // adjusts rotation of camera based on mouse movement,
-        // but i dont fully understand this yet
-        float rotationX = sensitivity * (float)(mouseY - (width/2)) / width;
+        // mouseY in rotationX because rotation around X axis
+        // mouseX in rotationY because rotation around Y axis
+        float rotationX = sensitivity * (float)(mouseY - (height/2)) / height;
         float rotationY = sensitivity * (float)(mouseX - (width/2)) / width;
 
-        // i dont fully understand what this is for
+        // for clamping camera rotation
         glm::vec3 newOrientation = glm::rotate(orientation, glm::radians(-rotationX), glm::normalize(glm::cross(orientation, up)));
         if (!((glm::angle(newOrientation, up) <= glm::radians(5.0f)) || (glm::angle(newOrientation, -up) <= glm::radians(5.0f)))) {
             orientation = newOrientation;
