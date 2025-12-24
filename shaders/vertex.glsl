@@ -1,0 +1,16 @@
+#version 330 core
+
+layout (location = 0) in vec3 pos;
+layout (location = 1) in vec3 color;
+layout (location = 2) in vec2 _texCoord;
+
+out vec3 vertexColor;
+out vec2 texCoord;
+
+uniform mat4 cameraMatrix;
+
+void main() {
+    gl_Position = cameraMatrix * vec3(pos, 1.0f);
+    vertexColor = color;
+    texCoord = _texCoord;
+}
