@@ -10,7 +10,7 @@ out vec2 texCoord;
 uniform mat4 cameraMatrix;
 
 void main() {
-    gl_Position = cameraMatrix * vec3(pos, 1.0f);
+    gl_Position = cameraMatrix * vec4(pos, 1.0f);
     vertexColor = color;
     texCoord = _texCoord;
 }
