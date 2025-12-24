@@ -1,1 +1,1 @@
-g++ main.cpp glad.c -I./include -L./lib -lglfw3dll -omain.exe
+g++ main.cpp glad.c shader.cpp camera.cpp -I./include -L./lib -lglfw3dll -omain.exe

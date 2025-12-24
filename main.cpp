@@ -1,6 +1,8 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "shader.h"
+#include "camera.h"
 using namespace std;
 
 #define WIDTH 600
