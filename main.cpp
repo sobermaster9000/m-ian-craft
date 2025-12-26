@@ -193,7 +193,7 @@ int main() {
         // for camera movement
         camera.inputs(window);
         // apply camera matrix transformations
-        camera.matrix(45.0f, 0.1f, 100.0f, shader, "cameraMatrix");
+        camera.matrix(90.0f, 0.1f, 100.0f, shader, "cameraMatrix");
         
         // draw vertices
         glBindVertexArray(VAO);
