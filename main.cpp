@@ -1,13 +1,4 @@
-#include <iostream>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include "vao.h"
-#include "vbo.h"
-#include "ebo.h"
-#include "texture.h"
-#include "shader.h"
-#include "camera.h"
-using namespace std;
+#include "mesh.h"
 
 #define WIDTH 600
 #define HEIGHT 600
@@ -32,14 +23,14 @@ int main() {
     
     GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "M-Ian-Craft Beta", NULL, NULL);
     if (window == NULL) {
-        cerr << "Failed to create GLFW window" << endl;
+        std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
     }
     glfwMakeContextCurrent(window);
     
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        cerr << "Failed to initialize GLAD" << endl;
+        std::cerr << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
 
@@ -49,44 +40,42 @@ int main() {
 
     // initialize shaders
     Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
-    /********** End of Initialization **********/
 
-    /********** Vertex Data and Buffers **********/
-    GLfloat vertices[] = {
-        // vertices                 colors                      texCoords //
+    std::vector<Vertex> vertices{
+        // vertices                                   colors                                 texCoords //
 
-        -0.5f,  0.0f,   -0.5f,      1.0f,   1.0f,   1.0f,       0.0f,  0.5f,
-        0.5f,   0.0f,   -0.5f,      1.0f,   1.0f,   1.0f,       0.25f,  0.5f,
-        0.5f,   1.0f,   -0.5f,      1.0f,   1.0f,   1.0f,       0.25f,  1.0f,
-        -0.5f,  1.0f,   -0.5f,      1.0f,   1.0f,   1.0f,       0.0f,  1.0f,
+        Vertex{glm::vec3(-0.5f,  0.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.5f)},
+        Vertex{glm::vec3(0.5f,   0.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)},
+        Vertex{glm::vec3(0.5f,   1.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  1.0f)},
+        Vertex{glm::vec3(-0.5f,  1.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  1.0f)},
 
-        0.5f,   0.0f,   -0.5f,      1.0f,   1.0f,   1.0f,       0.25f,  0.5f,
-        0.5f,   0.0f,   0.5f,       1.0f,   1.0f,   1.0f,       0.5f,  0.5f,
-        0.5f,   1.0f,   0.5f,       1.0f,   1.0f,   1.0f,       0.5f,  1.0f,
-        0.5f,   1.0f,   -0.5f,      1.0f,   1.0f,   1.0f,       0.25f,  1.0f,
+        Vertex{glm::vec3(0.5f,   0.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)},
+        Vertex{glm::vec3(0.5f,   0.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.5f)},
+        Vertex{glm::vec3(0.5f,   1.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  1.0f)},
+        Vertex{glm::vec3(0.5f,   1.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  1.0f)},
 
-        0.5f,   0.0f,   0.5f,       1.0f,   1.0f,   1.0f,       0.5f,  0.5f,
-        -0.5f,  0.0f,   0.5f,       1.0f,   1.0f,   1.0f,       0.75f,  0.5f,
-        -0.5f,  1.0f,   0.5f,       1.0f,   1.0f,   1.0f,       0.75f,  1.0f,
-        0.5f,   1.0f,   0.5f,       1.0f,   1.0f,   1.0f,       0.5f,  1.0f,
+        Vertex{glm::vec3(0.5f,   0.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.5f)},
+        Vertex{glm::vec3(-0.5f,  0.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  0.5f)},
+        Vertex{glm::vec3(-0.5f,  1.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  1.0f)},
+        Vertex{glm::vec3(0.5f,   1.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  1.0f)},
 
-        -0.5f,  0.0f,   0.5f,       1.0f,   1.0f,   1.0f,       0.75f,  0.5f,
-        -0.5f,  0.0f,   -0.5f,      1.0f,   1.0f,   1.0f,       1.0f,  0.5f,
-        -0.5f,  1.0f,   -0.5f,      1.0f,   1.0f,   1.0f,       1.0f,  1.0f,
-        -0.5f,  1.0f,   0.5f,       1.0f,   1.0f,   1.0f,       0.75f,  1.0f,
+        Vertex{glm::vec3(-0.5f,  0.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  0.5f)},
+        Vertex{glm::vec3(-0.5f,  0.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(1.0f,  0.5f)},
+        Vertex{glm::vec3(-0.5f,  1.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(1.0f,  1.0f)},
+        Vertex{glm::vec3(-0.5f,  1.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  1.0f)},
 
-        -0.5f,  1.0f,   -0.5f,      1.0f,   1.0f,   1.0f,       0.0f,  0.0f,
-        0.5f,   1.0f,   -0.5f,      1.0f,   1.0f,   1.0f,       0.25f,  0.0f,
-        0.5f,   1.0f,   0.5f,       1.0f,   1.0f,   1.0f,       0.25f,  0.5f,
-        -0.5f,  1.0f,   0.5f,       1.0f,   1.0f,   1.0f,       0.0f,  0.5f,
+        Vertex{glm::vec3(-0.5f,  1.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.0f)},
+        Vertex{glm::vec3(0.5f,   1.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.0f)},
+        Vertex{glm::vec3(0.5f,   1.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)},
+        Vertex{glm::vec3(-0.5f,  1.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.5f)},
 
-        -0.5f,  0.0f,   0.5f,       1.0f,   1.0f,   1.0f,       0.25f,  0.0f,
-        0.5f,   0.0f,   0.5f,       1.0f,   1.0f,   1.0f,       0.5f,  0.0f,
-        0.5f,   0.0f,   -0.5f,      1.0f,   1.0f,   1.0f,       0.5f,  0.5f,
-        -0.5f,  0.0f,   -0.5f,      1.0f,   1.0f,   1.0f,       0.25f,  0.5f
+        Vertex{glm::vec3(-0.5f,  0.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.0f)},
+        Vertex{glm::vec3(0.5f,   0.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.0f)},
+        Vertex{glm::vec3(0.5f,   0.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.5f)},
+        Vertex{glm::vec3(-0.5f,  0.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)}
     };
 
-    GLuint indices[] = {
+    std::vector<GLuint> indices{
         0, 1, 2,
         0, 2, 3,
 
@@ -106,28 +95,15 @@ int main() {
         20, 22, 23
     };
 
-    VAO vao; vao.bind();
-    VBO vbo(vertices, sizeof(vertices));
-    EBO ebo(indices, sizeof(indices));
+    std::vector<Texture> textures{
+        Texture("textures/grass.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE)
+    };
 
-    vao.linkAttrib(vbo, 0, 3, GL_FLOAT, 8 * sizeof(GLfloat), (void*)(0));
-    vao.linkAttrib(vbo, 1, 3, GL_FLOAT, 8 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
-    vao.linkAttrib(vbo, 2, 2, GL_FLOAT, 8 * sizeof(GLfloat), (void*)(6 * sizeof(GLfloat)));
-
-    vao.unbind();
-    vbo.unbind();
-    ebo.unbind();
-    /********** End of Vertex Data and Buffers **********/
-
-    /********** Loading Texture **********/
-    Texture texture("textures/grass.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
-    texture.textureUnit(shader, "texture0", 0);
-    /********** End of Loading Texture **********/
+    Mesh block(vertices, indices, textures);
 
     // enable depth testing for textures
     glEnable(GL_DEPTH_TEST);
 
-    // initialize camera
     Camera camera(WIDTH, HEIGHT, glm::vec3(0, 0, 2.0f));
 
     /********** Main Loop **********/
@@ -138,21 +114,13 @@ int main() {
         glClearColor(0.68f, 0.85f, 0.90f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // activate shader and bind texture
-        shader.use();
-        texture.bind();
-
         // for camera movement
         camera.inputs(window);
         // apply camera matrix transformations
-        camera.matrix(90.0f, 0.1f, 100.0f, shader, "cameraMatrix");
+        camera.updateMatrix(90.0f, 0.1f, 100.0f);
         
-        // draw vertices
-        vao.bind();
-        ebo.bind();
-        glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, 0);
-        vao.unbind();
-        ebo.unbind();
+        // draw meshes
+        block.draw(shader, camera);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -160,10 +128,6 @@ int main() {
     /********** End of Main Loop **********/
     
     /********** Cleanup **********/
-    vao.destroy();
-    vbo.destroy();
-    ebo.destroy();
-    texture.destroy();
     shader.destroy();
 
     glfwDestroyWindow(window);
