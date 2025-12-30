@@ -3,6 +3,9 @@
 #include <GLFW/glfw3.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
+#include "vao.h"
+#include "vbo.h"
+#include "ebo.h"
 #include "shader.h"
 #include "camera.h"
 using namespace std;
@@ -104,37 +107,17 @@ int main() {
         20, 22, 23
     };
 
-    //declare ang generate buffers
-    GLuint VAO, VBO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    VAO vao; vao.bind();
+    VBO vbo(vertices, sizeof(vertices));
+    EBO ebo(indices, sizeof(indices));
 
-    // bind and initialize buffer data
-    glBindVertexArray(VAO);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-    
-    // for vertex attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void*)0);
-    glEnableVertexAttribArray(0);
-    
-    // for color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
-    
-    // for texCoords attribute
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void*)(6 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(2);
-    
-    // unbind buffers
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    vao.linkAttrib(vbo, 0, 3, GL_FLOAT, 8 * sizeof(GLfloat), (void*)(0));
+    vao.linkAttrib(vbo, 1, 3, GL_FLOAT, 8 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
+    vao.linkAttrib(vbo, 2, 2, GL_FLOAT, 8 * sizeof(GLfloat), (void*)(6 * sizeof(GLfloat)));
+
+    vao.unbind();
+    vbo.unbind();
+    ebo.unbind();
     /********** End of Vertex Data and Buffers **********/
 
     /********** Loading Texture **********/
@@ -196,11 +179,11 @@ int main() {
         camera.matrix(90.0f, 0.1f, 100.0f, shader, "cameraMatrix");
         
         // draw vertices
-        glBindVertexArray(VAO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        vao.bind();
+        ebo.bind();
         glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
+        vao.unbind();
+        ebo.unbind();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -208,9 +191,9 @@ int main() {
     /********** End of Main Loop **********/
     
     /********** Cleanup **********/
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
+    vao.destroy();
+    vbo.destroy();
+    ebo.destroy();
     glDeleteTextures(1, &texture);
     shader.deleteShader();
 
