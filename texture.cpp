@@ -35,7 +35,7 @@ Texture::Texture(const char* image, GLenum textureType, GLenum slot, GLenum form
     glBindTexture(type, 0);
 }
 
-void Texture::textureUnit(Shader shader, const char* uniform, GLuint unit) {
+void Texture::textureUnit(Shader& shader, const char* uniform, GLuint unit) {
     GLuint texture0Uniform = glGetUniformLocation(shader.id, uniform);
     shader.use();
     glUniform1i(texture0Uniform, unit);
