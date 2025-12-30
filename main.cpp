@@ -139,7 +139,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // activate shader and bind texture
-        shader.useShader();
+        shader.use();
         texture.bind();
 
         // for camera movement
@@ -164,7 +164,7 @@ int main() {
     vbo.destroy();
     ebo.destroy();
     texture.destroy();
-    shader.deleteShader();
+    shader.destroy();
 
     glfwDestroyWindow(window);
     glfwTerminate();

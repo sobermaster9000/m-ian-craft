@@ -12,7 +12,7 @@ Texture::Texture(const char* image, GLenum textureType, GLenum slot, GLenum form
     stbi_set_flip_vertically_on_load(true);
     unsigned char* bytes = stbi_load(image, &textureWidth, &textureHeight, &textureColorChannels, 0);
     // std::cout << image << " " << textureWidth << " " << textureHeight << " " << textureColorChannels << std::endl;
-    
+
     // declare texture with opengl
     glGenTextures(1, &id);
     glActiveTexture(slot);
@@ -36,8 +36,8 @@ Texture::Texture(const char* image, GLenum textureType, GLenum slot, GLenum form
 }
 
 void Texture::textureUnit(Shader shader, const char* uniform, GLuint unit) {
-    GLuint texture0Uniform = glGetUniformLocation(shader.shaderProgram, uniform);
-    shader.useShader();
+    GLuint texture0Uniform = glGetUniformLocation(shader.id, uniform);
+    shader.use();
     glUniform1i(texture0Uniform, unit);
 }
 

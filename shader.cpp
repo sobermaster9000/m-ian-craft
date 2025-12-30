@@ -39,14 +39,14 @@ Shader::Shader(const char* vertexShaderFile, const char* fragmentShaderFile) {
     }
 
     // linking shader program
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
+    id = glCreateProgram();
+    glAttachShader(id, vertexShader);
+    glAttachShader(id, fragmentShader);
+    glLinkProgram(id);
 
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    glGetProgramiv(id, GL_LINK_STATUS, &success);
     if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        glGetProgramInfoLog(id, 512, NULL, infoLog);
         std::cerr << "Error linking shader program\n" << infoLog << std::endl;
     }
 
@@ -54,10 +54,10 @@ Shader::Shader(const char* vertexShaderFile, const char* fragmentShaderFile) {
     glDeleteShader(fragmentShader);
 }
 
-void Shader::useShader() {
-    glUseProgram(shaderProgram);
+void Shader::use() {
+    glUseProgram(id);
 }
 
-void Shader::deleteShader() {
-    glDeleteProgram(shaderProgram);
+void Shader::destroy() {
+    glDeleteProgram(id);
 }

@@ -16,7 +16,7 @@ void Camera::matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shade
     projectionMatrix = glm::perspective(glm::radians(FOVdeg), (float)width/(float)height, nearPlane, farPlane);
 
     // update visual transformations in shader
-    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, uniform), 1, GL_FALSE, glm::value_ptr(projectionMatrix * viewMatrix));
+    glUniformMatrix4fv(glGetUniformLocation(shader.id, uniform), 1, GL_FALSE, glm::value_ptr(projectionMatrix * viewMatrix));
 }
 
 void Camera::inputs(GLFWwindow* window) {

@@ -11,10 +11,10 @@ std::string readShaderFile(const char* filename);
 
 class Shader {
     public:
-    GLuint shaderProgram;
+    GLuint id;
     Shader(const char* vertexShaderFile, const char* fragmentShaderFile);
-    void useShader();
-    void deleteShader();
+    void use();
+    void destroy();
 };
 
 #endif
