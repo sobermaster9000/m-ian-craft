@@ -1,11 +1,10 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb/stb_image.h>
 #include "vao.h"
 #include "vbo.h"
 #include "ebo.h"
+#include "texture.h"
 #include "shader.h"
 #include "camera.h"
 using namespace std;
@@ -121,38 +120,8 @@ int main() {
     /********** End of Vertex Data and Buffers **********/
 
     /********** Loading Texture **********/
-    // load texture bytes stb_image
-    int textureWidth, textureHeight, textureColorChannels;
-    stbi_set_flip_vertically_on_load(true);
-    unsigned char* bytes = stbi_load("textures/grass.png",
-        &textureWidth, &textureHeight, &textureColorChannels, 0);
-    
-    // declare texture with opengl
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    // for maintaining pixels and not blurring them
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    
-    // repeat image on s (x) and t (y) axis
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    // initialize opengl texture image
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, bytes);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    
-    // free and unbind
-    stbi_image_free(bytes);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    
-    // update shader sampler2D with loaded texture
-    GLuint texture0Uniform = glGetUniformLocation(shader.shaderProgram, "texture0");
-    shader.useShader();
-    glUniform1i(texture0Uniform, 0);
+    Texture texture("textures/grass.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+    texture.textureUnit(shader, "texture0", 0);
     /********** End of Loading Texture **********/
 
     // enable depth testing for textures
@@ -171,7 +140,7 @@ int main() {
 
         // activate shader and bind texture
         shader.useShader();
-        glBindTexture(GL_TEXTURE_2D, texture);
+        texture.bind();
 
         // for camera movement
         camera.inputs(window);
@@ -194,7 +163,7 @@ int main() {
     vao.destroy();
     vbo.destroy();
     ebo.destroy();
-    glDeleteTextures(1, &texture);
+    texture.destroy();
     shader.deleteShader();
 
     glfwDestroyWindow(window);

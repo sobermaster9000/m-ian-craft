@@ -1,1 +1,1 @@
-g++ main.cpp glad.c vao.cpp vbo.cpp ebo.cpp shader.cpp camera.cpp -I./include -L./lib -lglfw3dll -omain.exe
+g++ main.cpp glad.c vao.cpp vbo.cpp ebo.cpp texture.cpp shader.cpp camera.cpp -I./include -L./lib -lglfw3dll -omain.exe
