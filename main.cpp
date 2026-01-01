@@ -13,6 +13,40 @@ void processInput(GLFWwindow* window) {
     glfwSetWindowShouldClose(window, true);
 }
 
+void makeBlockVertices(std::vector<Vertex>& vertices, float x, float y, float z) {
+                        // vertices                                              colors                                 texCoords //
+
+    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.5f)});
+    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)});
+    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  1.0f)});
+    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  1.0f)});
+
+    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)});
+    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.5f)});
+    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  1.0f)});
+    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  1.0f)});
+
+    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.5f)});
+    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  0.5f)});
+    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  1.0f)});
+    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  1.0f)});
+
+    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  0.5f)});
+    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(1.0f,  0.5f)});
+    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(1.0f,  1.0f)});
+    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  1.0f)});
+
+    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.0f)});
+    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.0f)});
+    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)});
+    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.5f)});
+
+    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.0f)});
+    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.0f)});
+    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.5f)});
+    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)});
+}
+
 int main() {
     /********** Initialization **********/
     glfwInit();
@@ -41,40 +75,6 @@ int main() {
     // initialize shaders
     Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
-    std::vector<Vertex> vertices{
-        // vertices                                   colors                                 texCoords //
-
-        Vertex{glm::vec3(-0.5f,  0.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.5f)},
-        Vertex{glm::vec3(0.5f,   0.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)},
-        Vertex{glm::vec3(0.5f,   1.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  1.0f)},
-        Vertex{glm::vec3(-0.5f,  1.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  1.0f)},
-
-        Vertex{glm::vec3(0.5f,   0.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)},
-        Vertex{glm::vec3(0.5f,   0.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.5f)},
-        Vertex{glm::vec3(0.5f,   1.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  1.0f)},
-        Vertex{glm::vec3(0.5f,   1.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  1.0f)},
-
-        Vertex{glm::vec3(0.5f,   0.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.5f)},
-        Vertex{glm::vec3(-0.5f,  0.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  0.5f)},
-        Vertex{glm::vec3(-0.5f,  1.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  1.0f)},
-        Vertex{glm::vec3(0.5f,   1.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  1.0f)},
-
-        Vertex{glm::vec3(-0.5f,  0.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  0.5f)},
-        Vertex{glm::vec3(-0.5f,  0.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(1.0f,  0.5f)},
-        Vertex{glm::vec3(-0.5f,  1.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(1.0f,  1.0f)},
-        Vertex{glm::vec3(-0.5f,  1.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  1.0f)},
-
-        Vertex{glm::vec3(-0.5f,  1.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.0f)},
-        Vertex{glm::vec3(0.5f,   1.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.0f)},
-        Vertex{glm::vec3(0.5f,   1.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)},
-        Vertex{glm::vec3(-0.5f,  1.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.5f)},
-
-        Vertex{glm::vec3(-0.5f,  0.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.0f)},
-        Vertex{glm::vec3(0.5f,   0.0f,   0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.0f)},
-        Vertex{glm::vec3(0.5f,   0.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.5f)},
-        Vertex{glm::vec3(-0.5f,  0.0f,   -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)}
-    };
-
     std::vector<GLuint> indices{
         0, 1, 2,
         0, 2, 3,
@@ -99,7 +99,16 @@ int main() {
         Texture("textures/grass.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE)
     };
 
-    Mesh block(vertices, indices, textures);
+    std::vector<Mesh> meshes;
+    std::vector<Vertex> vertices0;
+    makeBlockVertices(vertices0, 0.0f, 0.0f, 0.0f);
+    meshes.push_back(Mesh(vertices0, indices, textures));
+    std::vector<Vertex> vertices1;
+    makeBlockVertices(vertices1, 0.0f, 1.0f, 0.0f);
+    meshes.push_back(Mesh(vertices1, indices, textures));
+    std::vector<Vertex> vertices2;
+    makeBlockVertices(vertices2, 0.0f, 2.0f, 0.0f);
+    meshes.push_back(Mesh(vertices2, indices, textures));
 
     // enable depth testing for textures
     glEnable(GL_DEPTH_TEST);
@@ -120,7 +129,9 @@ int main() {
         camera.updateMatrix(90.0f, 0.1f, 100.0f);
         
         // draw meshes
-        block.draw(shader, camera);
+        // block.draw(shader, camera);
+        for (Mesh& mesh: meshes)
+            mesh.draw(shader, camera);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
