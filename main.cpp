@@ -111,6 +111,11 @@ int main() {
     // enable depth testing for textures
     glEnable(GL_DEPTH_TEST);
 
+    // enable face culling
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+    glFrontFace(GL_CCW);
+
     Camera camera(WIDTH, HEIGHT, glm::vec3(0, 0, 2.0f));
 
     /********** Main Loop **********/
