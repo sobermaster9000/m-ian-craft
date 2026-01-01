@@ -118,8 +118,28 @@ int main() {
 
     Camera camera(WIDTH, HEIGHT, glm::vec3(0, 0, 2.0f));
 
+    // for FPS counter
+    double previousTime;
+    double currentTime;
+    double timeDifference;
+    unsigned int frameCount = 0;
+
     /********** Main Loop **********/
     while (!glfwWindowShouldClose(window)) {
+        // for FPS counter
+        currentTime = glfwGetTime();
+        timeDifference = currentTime - previousTime;
+        frameCount++;
+
+        if (timeDifference >= 1.0) {
+            std::string FPS = std::to_string(1.0 / timeDifference * frameCount);
+            std::string msPerFrame = std::to_string(timeDifference / frameCount * 1000.0);
+            std::string newTitle = "M-Ian-Craft Beta - " + FPS + " FPS / " + msPerFrame + " ms";
+            glfwSetWindowTitle(window, newTitle.c_str());
+            frameCount = 0;
+            previousTime = currentTime;
+        }
+
         processInput(window);
         
         // update background with color
