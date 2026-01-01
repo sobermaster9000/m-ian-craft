@@ -6,13 +6,14 @@ Camera::Camera(int width, int height, glm::vec3 position) {
     Camera::position = position;
 }
 
-void Camera::updateMatrix(float FOVdeg, float nearPlane, float farPlane) {
+void Camera::updateMatrix(float FOVdeg, float nearPlane, float farPlane, float scale) {
     // initialize vertices
     glm::mat4 viewMatrix = glm::mat4(1.0f);
     glm::mat4 projectionMatrix = glm::mat4(1.0f);
 
     // make camera look forward
     viewMatrix = glm::lookAt(position, position + orientation, up);
+    viewMatrix = glm::scale(viewMatrix, glm::vec3(scale, scale, scale));
     projectionMatrix = glm::perspective(glm::radians(FOVdeg), (float)width/(float)height, nearPlane, farPlane);
 
     cameraMatrix = projectionMatrix * viewMatrix;

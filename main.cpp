@@ -149,7 +149,7 @@ int main() {
         // for camera movement
         camera.inputs(window);
         // apply camera matrix transformations
-        camera.updateMatrix(90.0f, 0.1f, 100.0f);
+        camera.updateMatrix(90.0f, 0.1f, 100.0f, 1.0f);
         
         // draw meshes
         // block.draw(shader, camera);
