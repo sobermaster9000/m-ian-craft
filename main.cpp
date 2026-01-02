@@ -1,4 +1,5 @@
 #include "mesh.h"
+#include "PerlinNoise.hpp"
 
 #define WIDTH 600
 #define HEIGHT 600
@@ -99,11 +100,15 @@ int main() {
         Texture("textures/grass.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE)
     };
 
+    siv::PerlinNoise perlinNoise{siv::PerlinNoise::seed_type{69420u}};
     std::vector<Mesh> meshes;
     std::vector<Vertex> vertices(24);
-    for (int i = 0; i < 10; i++) {
-        for (int j = 0; j < 10; j++) {
-            makeBlockVertices(vertices, (float)i, 0.0f, (float)j);
+    for (int i = 0; i < 100; i++) {
+        for (int j = 0; j < 100; j++) {
+            makeBlockVertices(vertices,
+                (float)i,
+                (float)(int)(perlinNoise.octave2D_01((float)i * 0.03f, (float)j * 0.03f, 5) * 9.5f),
+                (float)j);
             meshes.push_back(Mesh(vertices, indices, textures));
         }
     }
@@ -116,7 +121,7 @@ int main() {
     glCullFace(GL_FRONT);
     glFrontFace(GL_CCW);
 
-    Camera camera(WIDTH, HEIGHT, glm::vec3(0, 0, 2.0f));
+    Camera camera(WIDTH, HEIGHT, glm::vec3(0.0f, 5.0f, 2.0f));
 
     // for FPS counter
     double previousTime;
