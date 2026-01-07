@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "mesh.h"
 #include "PerlinNoise.hpp"
 
@@ -6,6 +8,7 @@
 #define BUFFER_SIZE 1024
 
 #define CHUNK_SIZE 16
+#define RENDER_DIST 5
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -164,26 +167,6 @@ int main() {
     // initialize shaders
     Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
-    // std::vector<GLuint> indices{
-    //     0, 1, 2,
-    //     0, 2, 3,
-
-    //     4, 5, 6,
-    //     4, 6, 7,
-
-    //     8, 9, 10,
-    //     8, 10, 11,
-
-    //     12, 13, 14,
-    //     12, 14, 15,
-
-    //     16, 17, 18,
-    //     16, 18, 19,
-
-    //     20, 21, 22,
-    //     20, 22, 23
-    // };
-
     std::vector<Texture> textures{
         Texture("textures/grass.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE)
     };
@@ -192,33 +175,17 @@ int main() {
     std::vector<Mesh> meshes;
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
-    generateChunkMeshData(0, 0, perlinNoise, vertices, indices);
-    meshes.push_back(Mesh(vertices, indices, textures));
-    vertices.clear();
-    indices.clear();
-    generateChunkMeshData(0, CHUNK_SIZE, perlinNoise, vertices, indices);
-    meshes.push_back(Mesh(vertices, indices, textures));
-    vertices.clear();
-    indices.clear();
-    generateChunkMeshData(CHUNK_SIZE, 0, perlinNoise, vertices, indices);
-    meshes.push_back(Mesh(vertices, indices, textures));
-    vertices.clear();
-    indices.clear();
-    generateChunkMeshData(CHUNK_SIZE, CHUNK_SIZE, perlinNoise, vertices, indices);
-    meshes.push_back(Mesh(vertices, indices, textures));
+    for (int x = -RENDER_DIST*CHUNK_SIZE; x <= RENDER_DIST*CHUNK_SIZE; x += CHUNK_SIZE) {
+        for (int z = -RENDER_DIST*CHUNK_SIZE; z <= RENDER_DIST*CHUNK_SIZE; z += CHUNK_SIZE) {
+            if ((int)sqrt((pow(x,2) + pow(z,2))) > RENDER_DIST*CHUNK_SIZE)
+                continue;
 
-    // siv::PerlinNoise perlinNoise{siv::PerlinNoise::seed_type{69420u}};
-    // std::vector<Mesh> meshes;
-    // std::vector<Vertex> vertices(24);
-    // for (int i = 0; i < 100; i++) {
-    //     for (int j = 0; j < 100; j++) {
-    //         makeBlockVertices(vertices,
-    //             (float)i,
-    //             (float)(int)(perlinNoise.octave2D_01((float)i * 0.03f, (float)j * 0.03f, 5) * 9.5f),
-    //             (float)j);
-    //         meshes.push_back(Mesh(vertices, indices, textures));
-    //     }
-    // }
+            vertices.clear();
+            indices.clear();
+            generateChunkMeshData(x, z, perlinNoise, vertices, indices);
+            meshes.push_back(Mesh(vertices, indices, textures));
+        }
+    }
 
     // enable depth testing for textures
     glEnable(GL_DEPTH_TEST);
