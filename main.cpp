@@ -2,7 +2,7 @@
 #include <unordered_set>
 #include <queue>
 
-#include "mesh.h"
+#include "chunk.h"
 #include "PerlinNoise.hpp"
 
 #define WIDTH 600
@@ -191,12 +191,13 @@ int main() {
         Texture("textures/grass.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE)
     };
 
+    // initialization for chunk data generation
     int playerChunkX, playerChunkZ;
     std::unordered_set<std::pair<int,int>, PairHash, PairEqual> chunkCoords;
     std::queue<std::pair<int,int>> chunksToRender, chunksToDelete;
 
     siv::PerlinNoise perlinNoise{siv::PerlinNoise::seed_type{69420u}};
-    std::vector<Mesh> meshes;
+    std::vector<Chunk> chunks;
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
 
@@ -244,8 +245,8 @@ int main() {
         camera.updateMatrix(90.0f, 0.1f, 100.0f, 1.0f);
         
         // draw meshes
-        for (Mesh& mesh: meshes)
-            mesh.draw(shader, camera);
+        for (Chunk& chunk: chunks)
+            chunk.draw(shader, camera);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -255,18 +256,22 @@ int main() {
         playerChunkZ = (int)camera.position.z/CHUNK_SIZE*CHUNK_SIZE;
         for (int x = playerChunkX-RENDER_DIST*CHUNK_SIZE; x <= playerChunkX+RENDER_DIST*CHUNK_SIZE; x += CHUNK_SIZE) {
             for (int z = playerChunkZ-RENDER_DIST*CHUNK_SIZE; z <= playerChunkZ+RENDER_DIST*CHUNK_SIZE; z += CHUNK_SIZE) {
+                // distance check
                 if ((int)sqrt((pow(x-playerChunkX,2) + pow(z-playerChunkZ,2))) > RENDER_DIST*CHUNK_SIZE)
                     continue;
+                // check if chunk already exists
                 if (chunkCoords.find(std::pair<int,int>{x,z}) != chunkCoords.end())
                     continue;
+                // chunk data generation
                 chunkCoords.insert(std::pair<int,int>{x,z});
                 vertices.clear();
                 indices.clear();
                 generateChunkMeshData(x, z, perlinNoise, vertices, indices);
-                meshes.push_back(Mesh(vertices, indices, textures));
+                chunks.push_back(Chunk(x, z, vertices, indices, textures));
             }
         }
 
+        // debug
         std::cout << camera.position.x << " ";
         std::cout << camera.position.y << " ";
         std::cout << camera.position.z << std::endl;
