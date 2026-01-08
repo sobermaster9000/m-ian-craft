@@ -271,6 +271,26 @@ int main() {
             }
         }
 
+        // for chunk unloading
+        for (auto it = chunkCoords.begin(); it != chunkCoords.end(); ) {
+            int chunkX = it->first;
+            int chunkZ = it->second;
+            // distance check
+            if ((int)sqrt((pow(chunkX-playerChunkX,2) + pow(chunkZ-playerChunkZ,2))) > RENDER_DIST*CHUNK_SIZE) {
+                // remove from chunkCoords
+                it = chunkCoords.erase(it);
+                // remove from chunks vector
+                for (auto chunkIt = chunks.begin(); chunkIt != chunks.end(); chunkIt++) {
+                    if (chunkIt->chunkX == chunkX && chunkIt->chunkZ == chunkZ) {
+                        chunks.erase(chunkIt);
+                        break;
+                    }
+                }
+            } else {
+                it++;
+            }
+        }
+
         // debug
         std::cout << camera.position.x << " ";
         std::cout << camera.position.y << " ";
