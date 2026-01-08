@@ -1,4 +1,6 @@
 #include <cmath>
+#include <unordered_set>
+#include <queue>
 
 #include "mesh.h"
 #include "PerlinNoise.hpp"
@@ -9,6 +11,24 @@
 
 #define CHUNK_SIZE 16
 #define RENDER_DIST 5
+
+// for hashing pairs in unordered_set
+struct PairHash {
+    template <class T1, class T2>
+    std::size_t operator() (const std::pair<T1, T2>& p) const {
+        auto h1 = std::hash<T1>{}(p.first);
+        auto h2 = std::hash<T2>{}(p.second);
+        return h1 ^ h2;
+    }
+};
+
+// for comparing pairs in unordered_set
+struct PairEqual {
+    template <class T1, class T2>
+    bool operator() (const std::pair<T1, T2>& lhs, const std::pair<T1, T2>& rhs) const {
+        return lhs.first == rhs.first && lhs.second == rhs.second;
+    }
+};
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -171,21 +191,25 @@ int main() {
         Texture("textures/grass.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE)
     };
 
+    int playerChunkX, playerChunkZ;
+    std::unordered_set<std::pair<int,int>, PairHash, PairEqual> chunkCoords;
+    std::queue<std::pair<int,int>> chunksToRender, chunksToDelete;
+
     siv::PerlinNoise perlinNoise{siv::PerlinNoise::seed_type{69420u}};
     std::vector<Mesh> meshes;
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
-    for (int x = -RENDER_DIST*CHUNK_SIZE; x <= RENDER_DIST*CHUNK_SIZE; x += CHUNK_SIZE) {
-        for (int z = -RENDER_DIST*CHUNK_SIZE; z <= RENDER_DIST*CHUNK_SIZE; z += CHUNK_SIZE) {
-            if ((int)sqrt((pow(x,2) + pow(z,2))) > RENDER_DIST*CHUNK_SIZE)
-                continue;
+    // for (int x = -RENDER_DIST*CHUNK_SIZE; x <= RENDER_DIST*CHUNK_SIZE; x += CHUNK_SIZE) {
+    //     for (int z = -RENDER_DIST*CHUNK_SIZE; z <= RENDER_DIST*CHUNK_SIZE; z += CHUNK_SIZE) {
+    //         if ((int)sqrt((pow(x,2) + pow(z,2))) > RENDER_DIST*CHUNK_SIZE)
+    //             continue;
 
-            vertices.clear();
-            indices.clear();
-            generateChunkMeshData(x, z, perlinNoise, vertices, indices);
-            meshes.push_back(Mesh(vertices, indices, textures));
-        }
-    }
+    //         vertices.clear();
+    //         indices.clear();
+    //         generateChunkMeshData(x, z, perlinNoise, vertices, indices);
+    //         meshes.push_back(Mesh(vertices, indices, textures));
+    //     }
+    // }
 
     // enable depth testing for textures
     glEnable(GL_DEPTH_TEST);
@@ -236,6 +260,27 @@ int main() {
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        // for chunk loading
+        playerChunkX = (int)camera.position.x/CHUNK_SIZE*CHUNK_SIZE;
+        playerChunkZ = (int)camera.position.z/CHUNK_SIZE*CHUNK_SIZE;
+        for (int x = playerChunkX-RENDER_DIST*CHUNK_SIZE; x <= playerChunkX+RENDER_DIST*CHUNK_SIZE; x += CHUNK_SIZE) {
+            for (int z = playerChunkZ-RENDER_DIST*CHUNK_SIZE; z <= playerChunkZ+RENDER_DIST*CHUNK_SIZE; z += CHUNK_SIZE) {
+                if ((int)sqrt((pow(x-playerChunkX,2) + pow(z-playerChunkZ,2))) > RENDER_DIST*CHUNK_SIZE)
+                    continue;
+                if (chunkCoords.find(std::pair<int,int>{x,z}) != chunkCoords.end())
+                    continue;
+                chunkCoords.insert(std::pair<int,int>{x,z});
+                vertices.clear();
+                indices.clear();
+                generateChunkMeshData(x, z, perlinNoise, vertices, indices);
+                meshes.push_back(Mesh(vertices, indices, textures));
+            }
+        }
+
+        std::cout << camera.position.x << " ";
+        std::cout << camera.position.y << " ";
+        std::cout << camera.position.z << std::endl;
     }
     /********** End of Main Loop **********/
     
