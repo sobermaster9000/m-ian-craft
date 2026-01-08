@@ -199,17 +199,6 @@ int main() {
     std::vector<Mesh> meshes;
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
-    // for (int x = -RENDER_DIST*CHUNK_SIZE; x <= RENDER_DIST*CHUNK_SIZE; x += CHUNK_SIZE) {
-    //     for (int z = -RENDER_DIST*CHUNK_SIZE; z <= RENDER_DIST*CHUNK_SIZE; z += CHUNK_SIZE) {
-    //         if ((int)sqrt((pow(x,2) + pow(z,2))) > RENDER_DIST*CHUNK_SIZE)
-    //             continue;
-
-    //         vertices.clear();
-    //         indices.clear();
-    //         generateChunkMeshData(x, z, perlinNoise, vertices, indices);
-    //         meshes.push_back(Mesh(vertices, indices, textures));
-    //     }
-    // }
 
     // enable depth testing for textures
     glEnable(GL_DEPTH_TEST);
