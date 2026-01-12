@@ -26,6 +26,15 @@ const std::unordered_map<std::string,std::pair<float,float>> texCoordsMapping = 
     {"water", std::pair<float,float>{0.5f,0.5f}}
 };
 
+enum BlockFace {
+    FRONT,
+    RIGHT,
+    BACK,
+    LEFT,
+    TOP,
+    BOTTOM
+};
+
 // for hashing pairs in unordered_set
 struct PairHash {
     template <class T1, class T2>
@@ -52,6 +61,8 @@ void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     glfwSetWindowShouldClose(window, true);
 }
+
+void addBlockFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, BlockFace face, const char* blockFaceTexture);
 
 float getPerlinHeight(int x, int z, siv::PerlinNoise& perlinNoise) {
     return (float)(int)(perlinNoise.octave2D_01((float)x * 0.005f, (float)z * 0.005f, 7) * 100.0f);
