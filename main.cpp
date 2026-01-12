@@ -10,7 +10,7 @@
 #define BUFFER_SIZE 1024
 
 #define CHUNK_SIZE 16
-#define RENDER_DIST 5
+#define RENDER_DIST 4
 
 // for hashing pairs in unordered_set
 struct PairHash {
@@ -40,7 +40,7 @@ void processInput(GLFWwindow* window) {
 }
 
 float getPerlinHeight(int x, int z, siv::PerlinNoise& perlinNoise) {
-    return (float)(int)(perlinNoise.octave2D_01((float)x * 0.03f, (float)z * 0.03f, 5) * 9.5f);
+    return (float)(int)(perlinNoise.octave2D_01((float)x * 0.005f, (float)z * 0.005f, 8) * 50.0f);
 }
 
 void generateChunkMeshData(int chunkStartX, int chunkStartZ, siv::PerlinNoise& perlinNoise, std::vector<Vertex>& vertices, std::vector<GLuint>& indices) {
