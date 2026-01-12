@@ -1,5 +1,6 @@
 #include <cmath>
 #include <unordered_set>
+#include <unordered_map>
 #include <queue>
 
 #include "chunk.h"
@@ -11,6 +12,19 @@
 
 #define CHUNK_SIZE 16
 #define RENDER_DIST 8
+
+const std::unordered_map<std::string,std::pair<float,float>> texCoordsMapping = {
+    {"grass-top", std::pair<float,float>{0.0f,0.75f}},
+    {"grass-side", std::pair<float,float>{0.0f,0.5f}},
+    {"grass-bottom", std::pair<float,float>{0.0f,0.25f}},
+    {"sand", std::pair<float,float>{0.0f,0.0f}},
+    {"stone", std::pair<float,float>{0.25f,0.75f}},
+    {"bedrock", std::pair<float,float>{0.25f,0.5f}},
+    {"wood-side", std::pair<float,float>{0.25f,0.25f}},
+    {"wood-top-bottom", std::pair{0.25f,0.0f}},
+    {"leaves", std::pair<float,float>{0.5f,0.75f}},
+    {"water", std::pair<float,float>{0.5f,0.5f}}
+};
 
 // for hashing pairs in unordered_set
 struct PairHash {
