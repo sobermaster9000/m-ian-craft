@@ -10,7 +10,7 @@
 #define BUFFER_SIZE 1024
 
 #define CHUNK_SIZE 16
-#define RENDER_DIST 4
+#define RENDER_DIST 8
 
 // for hashing pairs in unordered_set
 struct PairHash {
@@ -40,7 +40,7 @@ void processInput(GLFWwindow* window) {
 }
 
 float getPerlinHeight(int x, int z, siv::PerlinNoise& perlinNoise) {
-    return (float)(int)(perlinNoise.octave2D_01((float)x * 0.005f, (float)z * 0.005f, 8) * 50.0f);
+    return (float)(int)(perlinNoise.octave2D_01((float)x * 0.005f, (float)z * 0.005f, 7) * 100.0f);
 }
 
 void generateChunkMeshData(int chunkStartX, int chunkStartZ, siv::PerlinNoise& perlinNoise, std::vector<Vertex>& vertices, std::vector<GLuint>& indices) {
@@ -48,74 +48,87 @@ void generateChunkMeshData(int chunkStartX, int chunkStartZ, siv::PerlinNoise& p
     for (int x = chunkStartX; x < chunkStartX + CHUNK_SIZE; x++) {
         for (int z = chunkStartZ; z < chunkStartZ + CHUNK_SIZE; z++) {
             float y = getPerlinHeight(x, z, perlinNoise);
-            if (getPerlinHeight(x, z-1, perlinNoise) < y) {
-                // add front face
-                vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.5f)});
-                vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)});
-                vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  1.0f)});
-                vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  1.0f)});
-                verticesLength = vertices.size();
-                indices.push_back(verticesLength-4);
-                indices.push_back(verticesLength-3);
-                indices.push_back(verticesLength-2);
-                indices.push_back(verticesLength-4);
-                indices.push_back(verticesLength-2);
-                indices.push_back(verticesLength-1);
+            float _y = y;
+            bool addedFace = true;
+            while (addedFace) {
+                addedFace = false;
+                if (getPerlinHeight(x, z-1, perlinNoise) < _y) {
+                    // add front face
+                    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  _y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.5f)});
+                    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   _y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)});
+                    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   _y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  1.0f)});
+                    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  _y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  1.0f)});
+                    verticesLength = vertices.size();
+                    indices.push_back(verticesLength-4);
+                    indices.push_back(verticesLength-3);
+                    indices.push_back(verticesLength-2);
+                    indices.push_back(verticesLength-4);
+                    indices.push_back(verticesLength-2);
+                    indices.push_back(verticesLength-1);
+                    addedFace = true;
+                }
+                if (getPerlinHeight(x, z+1, perlinNoise) < _y) {
+                    // add back face
+                    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   _y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.5f)});
+                    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  _y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  0.5f)});
+                    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  _y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  1.0f)});
+                    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   _y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  1.0f)});
+                    verticesLength = vertices.size();
+                    indices.push_back(verticesLength-4);
+                    indices.push_back(verticesLength-3);
+                    indices.push_back(verticesLength-2);
+                    indices.push_back(verticesLength-4);
+                    indices.push_back(verticesLength-2);
+                    indices.push_back(verticesLength-1);
+                    addedFace = true;
+                }
+                if (getPerlinHeight(x+1, z, perlinNoise) < _y) {
+                    // add right face
+                    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   _y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)});
+                    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   _y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.5f)});
+                    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   _y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  1.0f)});
+                    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   _y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  1.0f)});
+                    verticesLength = vertices.size();
+                    indices.push_back(verticesLength-4);
+                    indices.push_back(verticesLength-3);
+                    indices.push_back(verticesLength-2);
+                    indices.push_back(verticesLength-4);
+                    indices.push_back(verticesLength-2);
+                    indices.push_back(verticesLength-1);
+                    addedFace = true;
+                }
+                if (getPerlinHeight(x-1, z, perlinNoise) < _y) {
+                    // add left face
+                    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  _y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  0.5f)});
+                    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  _y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(1.0f,  0.5f)});
+                    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  _y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(1.0f,  1.0f)});
+                    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  _y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  1.0f)});
+                    verticesLength = vertices.size();
+                    indices.push_back(verticesLength-4);
+                    indices.push_back(verticesLength-3);
+                    indices.push_back(verticesLength-2);
+                    indices.push_back(verticesLength-4);
+                    indices.push_back(verticesLength-2);
+                    indices.push_back(verticesLength-1);
+                    addedFace = true;
+                }
+                if (_y == y) {
+                    // add top face
+                    vertices.push_back(Vertex{glm::vec3((float)x + -0.5f,  (float)_y + 1.0f,   (float)z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.0f)});
+                    vertices.push_back(Vertex{glm::vec3((float)x + 0.5f,   (float)_y + 1.0f,   (float)z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.0f)});
+                    vertices.push_back(Vertex{glm::vec3((float)x + 0.5f,   (float)_y + 1.0f,   (float)z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)});
+                    vertices.push_back(Vertex{glm::vec3((float)x + -0.5f,  (float)_y + 1.0f,   (float)z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.5f)});
+                    verticesLength = vertices.size();
+                    indices.push_back(verticesLength-4);
+                    indices.push_back(verticesLength-3);
+                    indices.push_back(verticesLength-2);
+                    indices.push_back(verticesLength-4);
+                    indices.push_back(verticesLength-2);
+                    indices.push_back(verticesLength-1);
+                    addedFace = true;
+                }
+                _y--;
             }
-            if (getPerlinHeight(x, z+1, perlinNoise) < y) {
-                // add back face
-                vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.5f)});
-                vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  0.5f)});
-                vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  1.0f)});
-                vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  1.0f)});
-                verticesLength = vertices.size();
-                indices.push_back(verticesLength-4);
-                indices.push_back(verticesLength-3);
-                indices.push_back(verticesLength-2);
-                indices.push_back(verticesLength-4);
-                indices.push_back(verticesLength-2);
-                indices.push_back(verticesLength-1);
-            }
-            if (getPerlinHeight(x+1, z, perlinNoise) < y) {
-                // add right face
-                vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)});
-                vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.5f)});
-                vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  1.0f)});
-                vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  1.0f)});
-                verticesLength = vertices.size();
-                indices.push_back(verticesLength-4);
-                indices.push_back(verticesLength-3);
-                indices.push_back(verticesLength-2);
-                indices.push_back(verticesLength-4);
-                indices.push_back(verticesLength-2);
-                indices.push_back(verticesLength-1);
-            }
-            if (getPerlinHeight(x-1, z, perlinNoise) < y) {
-                // add left face
-                vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  0.5f)});
-                vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(1.0f,  0.5f)});
-                vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(1.0f,  1.0f)});
-                vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  1.0f)});
-                verticesLength = vertices.size();
-                indices.push_back(verticesLength-4);
-                indices.push_back(verticesLength-3);
-                indices.push_back(verticesLength-2);
-                indices.push_back(verticesLength-4);
-                indices.push_back(verticesLength-2);
-                indices.push_back(verticesLength-1);
-            }
-            // add top face
-            vertices.push_back(Vertex{glm::vec3((float)x + -0.5f,  (float)y + 1.0f,   (float)z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.0f)});
-            vertices.push_back(Vertex{glm::vec3((float)x + 0.5f,   (float)y + 1.0f,   (float)z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.0f)});
-            vertices.push_back(Vertex{glm::vec3((float)x + 0.5f,   (float)y + 1.0f,   (float)z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)});
-            vertices.push_back(Vertex{glm::vec3((float)x + -0.5f,  (float)y + 1.0f,   (float)z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.5f)});
-            verticesLength = vertices.size();
-            indices.push_back(verticesLength-4);
-            indices.push_back(verticesLength-3);
-            indices.push_back(verticesLength-2);
-            indices.push_back(verticesLength-4);
-            indices.push_back(verticesLength-2);
-            indices.push_back(verticesLength-1);
         }
     }
 }
