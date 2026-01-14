@@ -17,12 +17,24 @@ const std::unordered_map<std::string,std::pair<float,float>> texCoordsMapping = 
     {"grass-top", std::pair<float,float>{0.0f,0.75f}},
     {"grass-side", std::pair<float,float>{0.0f,0.5f}},
     {"grass-bottom", std::pair<float,float>{0.0f,0.25f}},
-    {"sand", std::pair<float,float>{0.0f,0.0f}},
-    {"stone", std::pair<float,float>{0.25f,0.75f}},
-    {"bedrock", std::pair<float,float>{0.25f,0.5f}},
+    {"dirt-top", std::pair<float,float>{0.0f,0.25f}},
+    {"dirt-side", std::pair<float,float>{0.0f,0.25f}},
+    {"dirt-bottom", std::pair<float,float>{0.0f,0.25f}},
+    {"sand-top", std::pair<float,float>{0.0f,0.0f}},
+    {"sand-side", std::pair<float,float>{0.0f,0.0f}},
+    {"sand-bottom", std::pair<float,float>{0.0f,0.0f}},
+    {"stone-top", std::pair<float,float>{0.25f,0.75f}},
+    {"stone-side", std::pair<float,float>{0.25f,0.75f}},
+    {"stone-bottom", std::pair<float,float>{0.25f,0.75f}},
+    {"bedrock-top", std::pair<float,float>{0.25f,0.5f}},
+    {"bedrock-side", std::pair<float,float>{0.25f,0.5f}},
+    {"bedrock-bottom", std::pair<float,float>{0.25f,0.5f}},
+    {"wood-top", std::pair{0.25f,0.0f}},
     {"wood-side", std::pair<float,float>{0.25f,0.25f}},
-    {"wood-top-bottom", std::pair{0.25f,0.0f}},
-    {"leaves", std::pair<float,float>{0.5f,0.75f}},
+    {"wood-bottom", std::pair{0.25f,0.0f}},
+    {"leaves-top", std::pair<float,float>{0.5f,0.75f}},
+    {"leaves-side", std::pair<float,float>{0.5f,0.75f}},
+    {"leaves-bottom", std::pair<float,float>{0.5f,0.75f}},
     {"water", std::pair<float,float>{0.5f,0.5f}}
 };
 
@@ -62,94 +74,107 @@ void processInput(GLFWwindow* window) {
     glfwSetWindowShouldClose(window, true);
 }
 
-void addBlockFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, BlockFace face, const char* blockFaceTexture);
+void addBlockFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, BlockFace face, std::string blockFaceTexture, float x, float y, float z) {
+    float u = texCoordsMapping.at(blockFaceTexture).first;
+    float v = texCoordsMapping.at(blockFaceTexture).second;
+
+    switch (face) {
+        case FRONT:
+        vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u, v)});
+        vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u + 0.25f, v)});
+        vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u + 0.25f, v + 0.25f)});
+        vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u, v + 0.25f)});
+        break;
+
+        case RIGHT:
+        vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u, v)});
+        vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u + 0.25f, v)});
+        vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u + 0.25f, v + 0.25f)});
+        vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u, v + 0.25f)});
+        break;
+
+        case BACK:
+        vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u, v)});
+        vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u + 0.25f, v)});
+        vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u + 0.25f, v + 0.25f)});
+        vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u, v + 0.25f)});
+        break;
+
+        case LEFT:
+        vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u, v)});
+        vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u + 0.25f, v)});
+        vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u + 0.25f, v + 0.25f)});
+        vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u, v + 0.25f)});
+        break;
+
+        case TOP:
+        vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u, v)});
+        vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u + 0.25f, v)});
+        vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u + 0.25f, v + 0.25f)});
+        vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u, v + 0.25f)});
+        break;
+
+        case BOTTOM:
+        vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u, v)});
+        vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u + 0.25f, v)});
+        vertices.push_back(Vertex{glm::vec3(x + 0.5f,   y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u + 0.25f, v + 0.25f)});
+        vertices.push_back(Vertex{glm::vec3(x + -0.5f,  y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(u, v + 0.25f)});
+        break;
+    }
+
+    int verticesLength = vertices.size();
+    indices.push_back(verticesLength-4);
+    indices.push_back(verticesLength-3);
+    indices.push_back(verticesLength-2);
+    indices.push_back(verticesLength-4);
+    indices.push_back(verticesLength-2);
+    indices.push_back(verticesLength-1);
+}
 
 float getPerlinHeight(int x, int z, siv::PerlinNoise& perlinNoise) {
-    return (float)(int)(perlinNoise.octave2D_01((float)x * 0.005f, (float)z * 0.005f, 7) * 100.0f);
+    return (float)(int)(pow(perlinNoise.octave2D_01((float)x * 0.005f, (float)z * 0.005f, 7), 2.0f) * 100.0f - 25.0f);
 }
 
 void generateChunkMeshData(int chunkStartX, int chunkStartZ, siv::PerlinNoise& perlinNoise, std::vector<Vertex>& vertices, std::vector<GLuint>& indices) {
-    int verticesLength;
+    std::string currentTexture;
+
     for (int x = chunkStartX; x < chunkStartX + CHUNK_SIZE; x++) {
         for (int z = chunkStartZ; z < chunkStartZ + CHUNK_SIZE; z++) {
+
             float y = getPerlinHeight(x, z, perlinNoise);
             float _y = y;
             bool addedFace = true;
+
             while (addedFace) {
+                if (_y == y)
+                    currentTexture = "grass";
+                else
+                    currentTexture = "dirt";
+
                 addedFace = false;
                 if (getPerlinHeight(x, z-1, perlinNoise) < _y) {
                     // add front face
-                    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  _y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.5f)});
-                    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   _y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)});
-                    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   _y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  1.0f)});
-                    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  _y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  1.0f)});
-                    verticesLength = vertices.size();
-                    indices.push_back(verticesLength-4);
-                    indices.push_back(verticesLength-3);
-                    indices.push_back(verticesLength-2);
-                    indices.push_back(verticesLength-4);
-                    indices.push_back(verticesLength-2);
-                    indices.push_back(verticesLength-1);
+                    addBlockFace(vertices, indices, FRONT, currentTexture + "-side", x, _y, z);
                     addedFace = true;
                 }
                 if (getPerlinHeight(x, z+1, perlinNoise) < _y) {
                     // add back face
-                    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   _y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.5f)});
-                    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  _y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  0.5f)});
-                    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  _y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  1.0f)});
-                    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   _y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  1.0f)});
-                    verticesLength = vertices.size();
-                    indices.push_back(verticesLength-4);
-                    indices.push_back(verticesLength-3);
-                    indices.push_back(verticesLength-2);
-                    indices.push_back(verticesLength-4);
-                    indices.push_back(verticesLength-2);
-                    indices.push_back(verticesLength-1);
+                    addBlockFace(vertices, indices, BACK, currentTexture + "-side", x, _y, z);
                     addedFace = true;
                 }
                 if (getPerlinHeight(x+1, z, perlinNoise) < _y) {
                     // add right face
-                    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   _y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)});
-                    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   _y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  0.5f)});
-                    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   _y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.5f,  1.0f)});
-                    vertices.push_back(Vertex{glm::vec3(x + 0.5f,   _y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  1.0f)});
-                    verticesLength = vertices.size();
-                    indices.push_back(verticesLength-4);
-                    indices.push_back(verticesLength-3);
-                    indices.push_back(verticesLength-2);
-                    indices.push_back(verticesLength-4);
-                    indices.push_back(verticesLength-2);
-                    indices.push_back(verticesLength-1);
+                    addBlockFace(vertices, indices, RIGHT, currentTexture + "-side", x, _y, z);
                     addedFace = true;
                 }
                 if (getPerlinHeight(x-1, z, perlinNoise) < _y) {
                     // add left face
-                    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  _y + 0.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  0.5f)});
-                    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  _y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(1.0f,  0.5f)});
-                    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  _y + 1.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(1.0f,  1.0f)});
-                    vertices.push_back(Vertex{glm::vec3(x + -0.5f,  _y + 1.0f,   z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.75f,  1.0f)});
-                    verticesLength = vertices.size();
-                    indices.push_back(verticesLength-4);
-                    indices.push_back(verticesLength-3);
-                    indices.push_back(verticesLength-2);
-                    indices.push_back(verticesLength-4);
-                    indices.push_back(verticesLength-2);
-                    indices.push_back(verticesLength-1);
+                    addBlockFace(vertices, indices, LEFT, currentTexture + "-side", x, _y, z);
                     addedFace = true;
                 }
                 if (_y == y) {
                     // add top face
-                    vertices.push_back(Vertex{glm::vec3((float)x + -0.5f,  (float)_y + 1.0f,   (float)z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.0f)});
-                    vertices.push_back(Vertex{glm::vec3((float)x + 0.5f,   (float)_y + 1.0f,   (float)z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.0f)});
-                    vertices.push_back(Vertex{glm::vec3((float)x + 0.5f,   (float)_y + 1.0f,   (float)z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)});
-                    vertices.push_back(Vertex{glm::vec3((float)x + -0.5f,  (float)_y + 1.0f,   (float)z + 0.5f),       glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.0f,  0.5f)});
-                    verticesLength = vertices.size();
-                    indices.push_back(verticesLength-4);
-                    indices.push_back(verticesLength-3);
-                    indices.push_back(verticesLength-2);
-                    indices.push_back(verticesLength-4);
-                    indices.push_back(verticesLength-2);
-                    indices.push_back(verticesLength-1);
+                    addBlockFace(vertices, indices, TOP, currentTexture + "-top", x, _y, z);
                     addedFace = true;
                 }
                 _y--;
@@ -226,7 +251,7 @@ int main() {
     Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
     std::vector<Texture> textures{
-        Texture("textures/grass.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE)
+        Texture("textures/alpha-atlas.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE)
     };
 
     // initialization for chunk data generation
@@ -280,7 +305,7 @@ int main() {
         // for camera movement
         camera.inputs(window);
         // apply camera matrix transformations
-        camera.updateMatrix(90.0f, 0.1f, 100.0f, 1.0f);
+        camera.updateMatrix(90.0f, 0.1f, 200.0f, 1.0f);
         
         // draw meshes
         for (Chunk& chunk: chunks)
