@@ -246,6 +246,134 @@ void makeBlockVertices(std::vector<Vertex>& vertices, float x, float y, float z)
     vertices[23] = Vertex{glm::vec3(x + -0.5f,  y + 0.0f,   z + -0.5f),      glm::vec3(1.0f,   1.0f,   1.0f),       glm::vec2(0.25f,  0.5f)};
 }
 
+//********** for collisions */
+
+siv::PerlinNoise* perlinNoisePtr = nullptr;
+
+bool hasBlock(float x, float y, float z) {
+    // maybe add check if perlinNoisePtr is still nullptr
+    return getPerlinHeight(x, z, *perlinNoisePtr) >= y;
+}
+
+class Player : public Camera {
+    public:
+    float boundingBoxMinX;
+    float boundingBoxMinY;
+    float boundingBoxMinZ;
+    float boundingBoxSizeX = 0.8;
+    float boundingBoxSizeY = 1.8;
+    float boundingBoxSizeZ = 0.8;
+
+    Player(int width, int height, glm::vec3 position) : Camera(width, height, position) {
+        updateBoundingBoxPos();
+    }
+
+    void updateBoundingBoxPos() {
+        boundingBoxMinX = position.x - 0.5f;
+        boundingBoxMinY = position.y - 1.0f;
+        boundingBoxMinZ = position.z - 0.5f;
+    }
+
+    void inputs(GLFWwindow* window) {
+        std::vector<glm::vec3> collisionCandidateBlocks;
+        for (int x = (int)position.x - 1; x <= (int)position.x + 1; x++) {
+            for (int y = (int)position.y - 2; y <= (int)position.y + 1; y++) {
+                for (int z = (int)position.z - 1; z <= (int)position.z + 1; z++) {
+                    if (hasBlock(x, y, z))
+                        collisionCandidateBlocks.push_back(glm::vec3(x, y, z));
+                }
+            }
+        }
+
+        glm::vec3 delta = glm::vec3(0.0f);
+
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            delta += speed * glm::vec3(orientation.x, 0.0f, orientation.z);
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            delta -= speed * glm::normalize(glm::cross(orientation, up));
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            delta -= speed * glm::vec3(orientation.x, 0.0f, orientation.z);
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            delta += speed * glm::normalize(glm::cross(orientation, up));
+        }
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+            delta += speed * up;
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+            delta -= speed * up;
+        }
+
+        // todo: fix collision checking
+
+        position.x += delta.x;
+        for (auto blockPos: collisionCandidateBlocks) {
+            if (boundingBoxMinX < blockPos.x + 0.5f && boundingBoxMinX + boundingBoxSizeX > blockPos.x - 0.5f) {
+                // position.x -= (delta.x + (delta.x < 0 ? -0.1f : 0.1f));
+                position.x = (delta.x < 0 ? blockPos.x + 0.5f + boundingBoxSizeX : blockPos.x - 0.5f - boundingBoxSizeX);
+            }
+        }
+
+        position.y += delta.y;
+        for (auto blockPos: collisionCandidateBlocks) {
+            if (boundingBoxMinY < blockPos.y + 0.5f && boundingBoxMinY + boundingBoxSizeY > blockPos.y - 0.5f) {
+                // position.y -= (delta.y + (delta.y < 0 ? -0.1f : 0.1f));
+                position.y = (delta.y < 0 ? blockPos.y + 0.5f + boundingBoxSizeY : blockPos.y - 0.5f - boundingBoxSizeY);
+            }
+        }
+
+        position.z += delta.z;
+        for (auto blockPos: collisionCandidateBlocks) {
+            if (boundingBoxMinZ < blockPos.z + 0.5f && boundingBoxMinZ + boundingBoxSizeZ > blockPos.z - 0.5f) {
+                // position.z -= (delta.z + (delta.z < 0 ? -0.1f : 0.1f));
+                position.z = (delta.z < 0 ? blockPos.z + 0.5f + boundingBoxSizeZ : blockPos.z - 0.5f - boundingBoxSizeZ);
+            }
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+            speed = 1.0f;
+        }
+        else if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE) {
+            speed = 0.5f;
+        }
+
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
+            // so that the mouse is recentered every click, preventing abrupt jumping
+            if (firstClick) {
+                glfwSetCursorPos(window, (width / 2), (height / 2));
+                firstClick = false;
+            }
+
+            double mouseX, mouseY;
+            glfwGetCursorPos(window, &mouseX, &mouseY);
+
+            // mouseY in rotationX because rotation around X axis
+            // mouseX in rotationY because rotation around Y axis
+            float rotationX = sensitivity * (float)(mouseY - (height/2)) / height;
+            float rotationY = sensitivity * (float)(mouseX - (width/2)) / width;
+
+            // for clamping camera rotation
+            glm::vec3 newOrientation = glm::rotate(orientation, glm::radians(-rotationX), glm::normalize(glm::cross(orientation, up)));
+            if (!((glm::angle(newOrientation, up) <= glm::radians(5.0f)) || (glm::angle(newOrientation, -up) <= glm::radians(5.0f)))) {
+                orientation = newOrientation;
+            }
+            orientation = glm::rotate(orientation, glm::radians(-rotationY), up);
+
+            glfwSetCursorPos(window, (width / 2), (height / 2));
+        }
+        else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            firstClick = true;
+        }
+
+        updateBoundingBoxPos();
+    }
+};
+
 int main() {
     /********** Initialization **********/
     glfwInit();
@@ -284,6 +412,7 @@ int main() {
     std::queue<std::pair<int,int>> chunksToRender, chunksToDelete;
 
     siv::PerlinNoise perlinNoise{siv::PerlinNoise::seed_type{seed}};
+    perlinNoisePtr = &perlinNoise;
     std::vector<Chunk> chunks;
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
@@ -296,7 +425,8 @@ int main() {
     glCullFace(GL_FRONT);
     glFrontFace(GL_CCW);
 
-    Camera camera(WIDTH, HEIGHT, glm::vec3(0.0f, 5.0f, 2.0f));
+    // Camera camera(WIDTH, HEIGHT, glm::vec3(0.0f, 5.0f, 2.0f));
+    Player player(WIDTH, HEIGHT, glm::vec3(0.0f, 100.0f, 0.0f));
 
     // for FPS counter
     double previousTime;
@@ -327,20 +457,22 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // for camera movement
-        camera.inputs(window);
+        // camera.inputs(window);
+        player.inputs(window);
         // apply camera matrix transformations
-        camera.updateMatrix(90.0f, 0.1f, 200.0f, 1.0f);
+        // camera.updateMatrix(90.0f, 0.1f, 200.0f, 1.0f);
+        player.updateMatrix(90.0f, 0.1f, 200.0f, 1.0f);
         
         // draw meshes
         for (Chunk& chunk: chunks)
-            chunk.draw(shader, camera);
+            chunk.draw(shader, player);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
 
         // for chunk loading
-        playerChunkX = (int)camera.position.x/CHUNK_SIZE*CHUNK_SIZE;
-        playerChunkZ = (int)camera.position.z/CHUNK_SIZE*CHUNK_SIZE;
+        playerChunkX = (int)player.position.x/CHUNK_SIZE*CHUNK_SIZE;
+        playerChunkZ = (int)player.position.z/CHUNK_SIZE*CHUNK_SIZE;
         for (int x = playerChunkX-RENDER_DIST*CHUNK_SIZE; x <= playerChunkX+RENDER_DIST*CHUNK_SIZE; x += CHUNK_SIZE) {
             for (int z = playerChunkZ-RENDER_DIST*CHUNK_SIZE; z <= playerChunkZ+RENDER_DIST*CHUNK_SIZE; z += CHUNK_SIZE) {
                 // distance check
@@ -379,9 +511,9 @@ int main() {
         }
 
         // debug
-        std::cout << camera.position.x << " ";
-        std::cout << camera.position.y << " ";
-        std::cout << camera.position.z << std::endl;
+        std::cout << player.position.x << " ";
+        std::cout << player.position.y << " ";
+        std::cout << player.position.z << std::endl;
     }
     /********** End of Main Loop **********/
     
