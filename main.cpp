@@ -1,7 +1,9 @@
 #include <cmath>
+#include <functional>
 #include <unordered_set>
 #include <unordered_map>
 #include <queue>
+#include <sstream>
 
 #include "chunk.h"
 #include "PerlinNoise.hpp"
@@ -12,6 +14,8 @@
 
 #define CHUNK_SIZE 16
 #define RENDER_DIST 8
+
+unsigned int seed = 69420u;
 
 const std::unordered_map<std::string,std::pair<float,float>> texCoordsMapping = {
     {"grass-top", std::pair<float,float>{0.0f,0.75f}},
@@ -131,8 +135,21 @@ void addBlockFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, B
     indices.push_back(verticesLength-1);
 }
 
+float randomSeedProbability(float x, float y, float z) {
+    std::stringstream stream;
+    stream << seed << x << y << z;
+    std::hash<std::string> hasher;
+    std::size_t hashValue = hasher(stream.str());
+    return (float)(hashValue % 100) / 100.0f;
+}
+
+std::string getTransitionBlock(float x, float y, float z, int transitionStart, int transitionEnd, std::string topBlock, std::string bottomBlock) {
+    float transitionCutoff = 0.8f * ((y - transitionStart) / (transitionEnd - transitionStart));
+    return (randomSeedProbability(x, y, z) < transitionCutoff ? topBlock : bottomBlock);
+}
+
 float getPerlinHeight(int x, int z, siv::PerlinNoise& perlinNoise) {
-    return (float)(int)(pow(perlinNoise.octave2D_01((float)x * 0.005f, (float)z * 0.005f, 7), 2.0f) * 100.0f - 25.0f);
+    return (float)(int)(pow(perlinNoise.octave2D_01((float)x * 0.005f, (float)z * 0.005f, 7), 2.0f) * 100.0f);
 }
 
 void generateChunkMeshData(int chunkStartX, int chunkStartZ, siv::PerlinNoise& perlinNoise, std::vector<Vertex>& vertices, std::vector<GLuint>& indices) {
@@ -146,7 +163,14 @@ void generateChunkMeshData(int chunkStartX, int chunkStartZ, siv::PerlinNoise& p
             bool addedFace = true;
 
             while (addedFace) {
-                if (_y == y)
+                if (_y > 60)
+                    currentTexture = "stone";
+                else if (_y > 50)
+                    // todo: fix issue where transition block is grass and is not the top block
+                    currentTexture = getTransitionBlock(x, _y, z, 50, 60, "stone", "grass");
+                else if (_y < 5)
+                    currentTexture = "sand";
+                else if (_y == y)
                     currentTexture = "grass";
                 else
                     currentTexture = "dirt";
@@ -259,7 +283,7 @@ int main() {
     std::unordered_set<std::pair<int,int>, PairHash, PairEqual> chunkCoords;
     std::queue<std::pair<int,int>> chunksToRender, chunksToDelete;
 
-    siv::PerlinNoise perlinNoise{siv::PerlinNoise::seed_type{69420u}};
+    siv::PerlinNoise perlinNoise{siv::PerlinNoise::seed_type{seed}};
     std::vector<Chunk> chunks;
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
