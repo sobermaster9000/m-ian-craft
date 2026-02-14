@@ -256,6 +256,10 @@ bool hasBlock(float x, float y, float z) {
 }
 
 class Player : public Camera {
+    private:
+    double prevTime = glfwGetTime();
+    double deltaTime;
+
     public:
     float boundingBoxMinX;
     float boundingBoxMinY;
@@ -263,6 +267,7 @@ class Player : public Camera {
     float boundingBoxSizeX = 0.8;
     float boundingBoxSizeY = 1.8;
     float boundingBoxSizeZ = 0.8;
+    float blocksPerSecond = 5.0f;
 
     Player(int width, int height, glm::vec3 position) : Camera(width, height, position) {
         updateBoundingBoxPos();
@@ -286,29 +291,31 @@ class Player : public Camera {
         }
 
         glm::vec3 delta = glm::vec3(0.0f);
-
+        // make speed constant regardless of frame rate
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-            delta += speed * glm::vec3(orientation.x, 0.0f, orientation.z);
+            delta += blocksPerSecond * glm::vec3(orientation.x, 0.0f, orientation.z);
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-            delta -= speed * glm::normalize(glm::cross(orientation, up));
+            delta -= blocksPerSecond * glm::normalize(glm::cross(orientation, up));
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-            delta -= speed * glm::vec3(orientation.x, 0.0f, orientation.z);
+            delta -= blocksPerSecond * glm::vec3(orientation.x, 0.0f, orientation.z);
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-            delta += speed * glm::normalize(glm::cross(orientation, up));
+            delta += blocksPerSecond * glm::normalize(glm::cross(orientation, up));
         }
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-            delta += speed * up;
+            delta += blocksPerSecond * up;
         }
         if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
-            delta -= speed * up;
+            delta -= blocksPerSecond * up;
         }
 
         // todo: fix collision checking
+        deltaTime = glfwGetTime() - prevTime;
+        prevTime = glfwGetTime();
 
-        position.x += delta.x;
+        position.x += delta.x * deltaTime;
         for (auto blockPos: collisionCandidateBlocks) {
             if (boundingBoxMinX < blockPos.x + 0.5f && boundingBoxMinX + boundingBoxSizeX > blockPos.x - 0.5f) {
                 // position.x -= (delta.x + (delta.x < 0 ? -0.1f : 0.1f));
@@ -316,15 +323,16 @@ class Player : public Camera {
             }
         }
 
-        position.y += delta.y;
+        position.y += delta.y * deltaTime;
+        // position.y += -blocksPerSecond * deltaTime - (9.81f * deltaTime * deltaTime) / 2.0f;
         for (auto blockPos: collisionCandidateBlocks) {
-            if (boundingBoxMinY < blockPos.y + 0.5f && boundingBoxMinY + boundingBoxSizeY > blockPos.y - 0.5f) {
+            if (boundingBoxMinY < blockPos.y + 1.0f && boundingBoxMinY + boundingBoxSizeY > blockPos.y) {
                 // position.y -= (delta.y + (delta.y < 0 ? -0.1f : 0.1f));
                 position.y = (delta.y < 0 ? blockPos.y + 0.5f + boundingBoxSizeY : blockPos.y - 0.5f - boundingBoxSizeY);
             }
         }
 
-        position.z += delta.z;
+        position.z += delta.z * deltaTime;
         for (auto blockPos: collisionCandidateBlocks) {
             if (boundingBoxMinZ < blockPos.z + 0.5f && boundingBoxMinZ + boundingBoxSizeZ > blockPos.z - 0.5f) {
                 // position.z -= (delta.z + (delta.z < 0 ? -0.1f : 0.1f));
@@ -332,12 +340,12 @@ class Player : public Camera {
             }
         }
 
-        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-            speed = 1.0f;
-        }
-        else if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE) {
-            speed = 0.5f;
-        }
+        // if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+        //     speed = 1.0f;
+        // }
+        // else if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE) {
+        //     speed = 0.5f;
+        // }
 
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
@@ -429,21 +437,21 @@ int main() {
     Player player(WIDTH, HEIGHT, glm::vec3(0.0f, 100.0f, 0.0f));
 
     // for FPS counter
-    double previousTime;
+    double previousTime = glfwGetTime();
     double currentTime;
-    double timeDifference;
+    double deltaTime;
     unsigned int frameCount = 0;
 
     /********** Main Loop **********/
     while (!glfwWindowShouldClose(window)) {
         // for FPS counter
         currentTime = glfwGetTime();
-        timeDifference = currentTime - previousTime;
+        deltaTime = currentTime - previousTime;
         frameCount++;
 
-        if (timeDifference >= 1.0) {
-            std::string FPS = std::to_string(1.0 / timeDifference * frameCount);
-            std::string msPerFrame = std::to_string(timeDifference / frameCount * 1000.0);
+        if (deltaTime >= 1.0) {
+            std::string FPS = std::to_string(1.0 / deltaTime * frameCount);
+            std::string msPerFrame = std::to_string(deltaTime / frameCount * 1000.0);
             std::string newTitle = "M-Ian-Craft Beta - " + FPS + " FPS / " + msPerFrame + " ms";
             glfwSetWindowTitle(window, newTitle.c_str());
             frameCount = 0;
@@ -458,6 +466,7 @@ int main() {
 
         // for camera movement
         // camera.inputs(window);
+        std::cout << deltaTime << std::endl;
         player.inputs(window);
         // apply camera matrix transformations
         // camera.updateMatrix(90.0f, 0.1f, 200.0f, 1.0f);
